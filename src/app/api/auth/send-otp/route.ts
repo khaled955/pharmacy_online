@@ -103,8 +103,14 @@ export async function POST(request: Request) {
 
     // ── Production: send email via Resend ──────────────────────────────────
     if (!isDev) {
+      const resendApiKey = process.env.RESEND_API_KEY
+      const resendDomain = process.env.RESEND_DOMAIN
+
+      if (!resendApiKey) throw new Error("RESEND_API_KEY is not set")
+      if (!resendDomain) throw new Error("RESEND_DOMAIN is not set")
+
       const { Resend } = await import("resend")
-      const resend = new Resend(process.env.RESEND_API_KEY)
+      const resend = new Resend(resendApiKey)
 
       const isPasswordReset = type === OTP_TYPES.FORGOT_PASSWORD
 
@@ -137,7 +143,7 @@ export async function POST(request: Request) {
           : `Expires in ${OTP_CONFIG.EXPIRY_MINUTES} minutes`
 
       const { error: emailError } = await resend.emails.send({
-        from: `Pharmacy <noreply@${process.env.RESEND_DOMAIN}>`,
+        from: `Pharmacy <noreply@${resendDomain}>`,
         to: email,
         subject,
         html: `
