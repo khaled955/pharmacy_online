@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
 
 export async function POST(request: Request) {
   const locale = request.headers.get("Accept-Language") || "en";
@@ -15,8 +20,6 @@ export async function POST(request: Request) {
         data: null,
       });
     }
-
-    const supabase = await createClient();
 
     // Find OTP record
     const { data: otpRecord, error } = await supabase
@@ -44,7 +47,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Mark OTP as used
+    // Mark as used
     await supabase
       .from("password_reset_otps")
       .update({ used: true })
