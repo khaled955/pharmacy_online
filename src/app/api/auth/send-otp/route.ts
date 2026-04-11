@@ -101,16 +101,18 @@ export async function POST(request: Request) {
 
     const isDev = process.env.NODE_ENV === "development"
 
-    // ── Production: send email via Resend ──────────────────────────────────
+    // ── Production: send email via Gmail SMTP ─────────────────────────────
     if (!isDev) {
-      const resendApiKey = process.env.RESEND_API_KEY
-      const resendDomain = process.env.RESEND_DOMAIN
+      const gmailUser = process.env.GMAIL_USER
+      const gmailPass = process.env.GMAIL_APP_PASSWORD
+      if (!gmailUser) throw new Error("GMAIL_USER is not set")
+      if (!gmailPass) throw new Error("GMAIL_APP_PASSWORD is not set")
 
-      if (!resendApiKey) throw new Error("RESEND_API_KEY is not set")
-      if (!resendDomain) throw new Error("RESEND_DOMAIN is not set")
-
-      const { Resend } = await import("resend")
-      const resend = new Resend(resendApiKey)
+      const nodemailer = await import("nodemailer")
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: gmailUser, pass: gmailPass },
+      })
 
       const isPasswordReset = type === OTP_TYPES.FORGOT_PASSWORD
 
@@ -142,8 +144,8 @@ export async function POST(request: Request) {
           ? `صالح لمدة ${OTP_CONFIG.EXPIRY_MINUTES} دقائق`
           : `Expires in ${OTP_CONFIG.EXPIRY_MINUTES} minutes`
 
-      const { error: emailError } = await resend.emails.send({
-        from: `Pharmacy <noreply@${resendDomain}>`,
+      await transporter.sendMail({
+        from: `Pharmacy <${gmailUser}>`,
         to: email,
         subject,
         html: `
@@ -160,8 +162,6 @@ export async function POST(request: Request) {
           </div>
         `,
       })
-
-      if (emailError) throw new Error(emailError.message)
 
       return NextResponse.json({
         status: true,
