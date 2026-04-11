@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+
+// Service role client — bypasses RLS
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
 
 function generateOTP(): string {
   return Math.floor(10000 + Math.random() * 90000).toString();
@@ -20,7 +26,6 @@ export async function POST(request: Request) {
       });
     }
 
-    const supabase = await createClient();
     const otp = generateOTP();
     const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
