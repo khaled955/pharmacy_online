@@ -28,20 +28,49 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      // User already exists
+      // User already exists — they may have registered but never completed OTP.
+      // Look up their existing record and return it so the frontend can proceed
+      // to the OTP step and send them a fresh code instead of blocking them.
       if (
         error.message.toLowerCase().includes("already registered") ||
         error.message.toLowerCase().includes("already exists")
       ) {
+        const { data: usersData } = await supabase.auth.admin.listUsers({
+          page: 1,
+          perPage: 1000,
+        });
+
+        const existingUser = usersData?.users.find((u) => u.email === email);
+
+        if (!existingUser) throw new Error(error.message);
+
+        // Fetch their profile (may not exist yet if a previous attempt failed mid-way)
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("first_name, last_name, phone, avatar_url, role")
+          .eq("id", existingUser.id)
+          .maybeSingle();
+
         return NextResponse.json({
-          status: false,
+          status: true,
           message:
             locale === "ar"
-              ? "البريد الإلكتروني مستخدم بالفعل"
-              : "Email already registered",
-          data: null,
+              ? "الحساب موجود، سيتم إرسال رمز تحقق جديد"
+              : "Account exists, sending a new verification code",
+          data: {
+            user: {
+              id: existingUser.id,
+              email: existingUser.email,
+              first_name: profile?.first_name ?? first_name,
+              last_name: profile?.last_name ?? last_name,
+              phone: profile?.phone ?? phone,
+              avatar_url: profile?.avatar_url ?? avatar_url ?? null,
+              role: profile?.role ?? "customer",
+            },
+          },
         });
       }
+
       throw new Error(error.message);
     }
 

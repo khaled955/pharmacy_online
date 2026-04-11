@@ -1,145 +1,192 @@
-
 "use client"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOGIN PAGE  (/login)
+// Authenticates via Supabase signInWithPassword through the loginAction service.
+// Redirects to home on success; shows an inline error on failure.
+// ─────────────────────────────────────────────────────────────────────────────
 
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Mail, Lock, ShieldCheck } from "lucide-react"
+
 import { useLogin } from "./_hooks/use-login"
-import { LoginInput, loginSchema } from "@/lib/schemas/auth/login.schema"
+import { loginSchema, type LoginInput } from "@/lib/schemas/auth/login.schema"
+import { AUTH_ROUTES } from "@/lib/constants/auth"
 
 export default function LoginPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+
   const { mutate: login, isPending, data } = useLogin()
 
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema),
   })
 
   function onSubmit(values: LoginInput) {
-    login(values)
+    login(values, {
+      onSuccess: (res) => {
+        // Redirect to home dashboard on successful authentication
+        if (res.status) router.push("/")
+      },
+    })
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-teal-50 via-white to-cyan-50 flex items-center justify-center p-4">
+    <div
+      className="flex min-h-screen items-center justify-center bg-gradient-to-br
+        from-teal-50 via-white to-cyan-50 p-4
+        dark:from-gray-950 dark:via-gray-900 dark:to-gray-950"
+    >
       <div className="w-full max-w-md">
 
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-600 rounded-2xl mb-4 shadow-lg">
-            <ShieldCheck className="w-8 h-8 text-white" />
+        {/* ── Logo + headings ── */}
+        <div className="mb-8 text-center">
+          <div
+            className="mb-4 inline-flex h-16 w-16 items-center justify-center
+              rounded-2xl bg-teal-600 shadow-lg dark:bg-teal-700"
+          >
+            <ShieldCheck className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-gray-500 mt-1 text-sm">Sign in to your pharmacy account</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Welcome back
+          </h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Sign in to your pharmacy account
+          </p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-
+        {/* ── Card ── */}
+        <div
+          className="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl
+            dark:border-gray-800 dark:bg-gray-900"
+        >
           {/* Server error */}
           {data && !data.status && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{data.message}</p>
-            </div>
-          )}
-
-          {/* Success */}
-          {data?.status && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-600 text-sm">✅ {data.message}</p>
+            <div
+              className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3
+                dark:border-red-800 dark:bg-red-950"
+            >
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {data.message}
+              </p>
             </div>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
-            {/* Email */}
+            {/* ── Email ── */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   {...register("email")}
                   type="email"
                   placeholder="you@example.com"
-                  className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm outline-none transition-all
-                    focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                    ${errors.email ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+                  className={`w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm outline-none transition-all
+                    focus:border-teal-500 focus:ring-2 focus:ring-teal-500
+                    dark:bg-gray-800 dark:text-white dark:placeholder-gray-500
+                    ${
+                      errors.email
+                        ? "border-red-400 bg-red-50 dark:border-red-700 dark:bg-red-950/30"
+                        : "border-gray-200 bg-gray-50 dark:border-gray-700"
+                    }`}
                 />
               </div>
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
               )}
             </div>
 
-            {/* Password */}
+            {/* ── Password ── */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Password
                 </label>
                 <Link
-                  href="/forgot-password"
-                  className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                  href={AUTH_ROUTES.FORGOT_PASSWORD}
+                  className="text-xs font-medium text-teal-600 hover:text-teal-700
+                    dark:text-teal-400 dark:hover:text-teal-300"
                 >
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   {...register("password")}
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-xl text-sm outline-none transition-all
-                    focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                    ${errors.password ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+                  className={`w-full rounded-xl border py-2.5 pl-10 pr-10 text-sm outline-none transition-all
+                    focus:border-teal-500 focus:ring-2 focus:ring-teal-500
+                    dark:bg-gray-800 dark:text-white dark:placeholder-gray-500
+                    ${
+                      errors.password
+                        ? "border-red-400 bg-red-50 dark:border-red-700 dark:bg-red-950/30"
+                        : "border-gray-200 bg-gray-50 dark:border-gray-700"
+                    }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
               )}
             </div>
 
-            {/* Submit */}
+            {/* ── Submit ── */}
             <button
               type="submit"
               disabled={isPending}
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-xl
-                transition-all duration-200 text-sm shadow-md hover:shadow-lg
-                disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              className="mt-2 w-full rounded-xl bg-teal-600 py-2.5 text-sm font-semibold
+                text-white shadow-md transition-all duration-200
+                hover:bg-teal-700 hover:shadow-lg
+                disabled:cursor-not-allowed disabled:opacity-60
+                dark:bg-teal-700 dark:hover:bg-teal-600"
             >
               {isPending ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                   Signing in...
                 </span>
-              ) : "Sign in"}
+              ) : (
+                "Sign in"
+              )}
             </button>
-
           </form>
 
-          {/* Footer */}
-          <p className="text-center text-sm text-gray-500 mt-6">
+          {/* ── Footer ── */}
+          <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-teal-600 hover:text-teal-700 font-semibold">
+            <Link
+              href={AUTH_ROUTES.REGISTER}
+              className="font-semibold text-teal-600 hover:text-teal-700
+                dark:text-teal-400 dark:hover:text-teal-300"
+            >
               Create one
             </Link>
           </p>
-
         </div>
       </div>
     </div>

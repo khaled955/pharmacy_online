@@ -1,102 +1,96 @@
 "use client"
 
+// ─────────────────────────────────────────────────────────────────────────────
+// REGISTER PAGE  (/register)
+// Two-step flow rendered in a single route:
+//   Step 1 — register: user fills in personal details + password
+//   Step 2 — otp:      user enters the 5-digit verification code sent to email
+// On successful OTP verification the user is redirected to login.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
 import Link from "next/link"
-import { useState } from "react"
-import { Eye, EyeOff, Mail, Lock, User, Phone, ShieldCheck, Upload, KeyRound } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import {
+  Eye, EyeOff, Mail, Lock, User, Phone,
+  ShieldCheck, Upload, KeyRound,
+} from "lucide-react"
+
 import { useRegister } from "./_hooks/use-register"
-import type { RegisterInput } from "@/lib/schemas/auth/register.schema"
-import { registerSchema } from "@/lib/schemas/auth/register.schema"
-import { RegisterResponseData } from "@/lib/types/auth"
-
-// Verify OTP service
-async function verifyOtp(email: string, otp: string) {
-  const res = await fetch("/api/auth/verify-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, otp })
-  })
-  return res.json()
-}
-
-// Resend OTP service
-async function resendOtp(email: string) {
-  const res = await fetch("/api/auth/send-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
-  })
-  return res.json()
-}
+import { registerSchema, type RegisterInput } from "@/lib/schemas/auth/register.schema"
+import {
+  AUTH_ROUTES,
+  MUTATION_KEYS,
+  OTP_CONFIG,
+  OTP_TYPES,
+  REGISTER_STEPS,
+  type RegisterStep,
+} from "@/lib/constants/auth"
+import { verifyRegisterOtpAction, sendOtpAction } from "@/lib/auth/auth-service"
+import type { RegisterResponseData } from "@/lib/types/auth"
 
 export default function RegisterPage() {
   const router = useRouter()
 
-  // Steps
-  const [step, setStep] = useState<"register" | "otp">("register")
+  // ── Step state ────────────────────────────────────────────────────────────
+  const [step, setStep] = useState<RegisterStep>(REGISTER_STEPS.FORM)
   const [registeredEmail, setRegisteredEmail] = useState("")
-
-  // OTP state
   const [otp, setOtp] = useState("")
   const [devOtp, setDevOtp] = useState<string | null>(null)
 
-  // Password visibility
+  // ── Password visibility toggles ───────────────────────────────────────────
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  // Avatar preview
+  // ── Avatar preview URL ────────────────────────────────────────────────────
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
-  // Mutations
-  const { mutate: registerUser, isPending: isRegistering, data: registerData } = useRegister()
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const { mutate: register, isPending: isRegistering, data: registerData } = useRegister()
 
+  // Verify OTP submitted in step 2
   const verifyMutation = useMutation({
+    mutationKey: MUTATION_KEYS.VERIFY_OTP,
     mutationFn: ({ email, otp }: { email: string; otp: string }) =>
-      verifyOtp(email, otp),
+      verifyRegisterOtpAction(email, otp),
     onSuccess: (data) => {
-      if (data.status) {
-        router.push("/login?verified=true")
-      }
-    }
+      if (data.status) router.push(`${AUTH_ROUTES.LOGIN}?verified=true`)
+    },
   })
 
+  // Resend OTP when user didn't receive it
   const resendMutation = useMutation({
-    mutationFn: (email: string) => resendOtp(email),
+    mutationKey: MUTATION_KEYS.RESEND_OTP,
+    mutationFn: (email: string) =>
+      sendOtpAction({ email, type: OTP_TYPES.REGISTER }),
     onSuccess: (data) => {
-      if (data.status && data.data?.otp) {
-        setDevOtp(data.data.otp)
-      }
-    }
+      if (data.status && data.data?.otp) setDevOtp(data.data.otp)
+    },
   })
 
-  // Form
+  // ── Register form ─────────────────────────────────────────────────────────
   const {
-    register,
+    register: formRegister,
     handleSubmit,
     setValue,
-    formState: { errors }
-  } = useForm<RegisterInput>({
-    resolver: zodResolver(registerSchema)
-  })
+    formState: { errors },
+  } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) })
 
-  // Handlers
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   function onSubmit(values: RegisterInput) {
-    registerUser(values, {
+    register(values, {
       onSuccess: (data) => {
-        if (data.status) {
-          setRegisteredEmail(values.email)
-          // Store dev OTP if present
-          const responseData = data.data as RegisterResponseData
-          if (responseData?.otp) {
-            setDevOtp(responseData.otp)
-          }
-          setStep("otp")
-        }
-      }
+        if (!data.status) return
+        setRegisteredEmail(values.email)
+        const payload = data.data as RegisterResponseData
+        if (payload?.otp) setDevOtp(payload.otp)
+        setStep(REGISTER_STEPS.OTP)
+      },
     })
   }
 
@@ -116,68 +110,116 @@ export default function RegisterPage() {
     resendMutation.mutate(registeredEmail)
   }
 
+  // ── Shared input class helpers ────────────────────────────────────────────
+  const inputBase =
+    "w-full rounded-xl border py-2.5 text-sm outline-none transition-all " +
+    "focus:border-teal-500 focus:ring-2 focus:ring-teal-500 " +
+    "dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+
+  const inputError = "border-red-400 bg-red-50 dark:border-red-700 dark:bg-red-950/30"
+  const inputNormal = "border-gray-200 bg-gray-50 dark:border-gray-700"
+
+  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-linear-to-br from-teal-50 via-white to-cyan-50 flex items-center justify-center p-4">
+    <div
+      className="flex min-h-screen items-center justify-center bg-gradient-to-br
+        from-teal-50 via-white to-cyan-50 p-4
+        dark:from-gray-950 dark:via-gray-900 dark:to-gray-950"
+    >
       <div className="w-full max-w-md">
 
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-600 rounded-2xl mb-4 shadow-lg">
-            <ShieldCheck className="w-8 h-8 text-white" />
+        {/* ── Logo + headings ── */}
+        <div className="mb-8 text-center">
+          <div
+            className="mb-4 inline-flex h-16 w-16 items-center justify-center
+              rounded-2xl bg-teal-600 shadow-lg dark:bg-teal-700"
+          >
+            <ShieldCheck className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {step === "register" ? "Create account" : "Verify your email"}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {step === REGISTER_STEPS.FORM ? "Create account" : "Verify your email"}
           </h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            {step === "register"
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {step === REGISTER_STEPS.FORM
               ? "Join our pharmacy platform"
-              : `We sent a 5-digit code to ${registeredEmail}`}
+              : `We sent a ${OTP_CONFIG.LENGTH}-digit code to ${registeredEmail}`}
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-
-          {/* Step indicators */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
-              ${step === "register" ? "bg-teal-600 text-white" : "bg-teal-100 text-teal-600"}`}>
+        {/* ── Card ── */}
+        <div
+          className="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl
+            dark:border-gray-800 dark:bg-gray-900"
+        >
+          {/* ── Step indicator ── */}
+          <div className="mb-6 flex items-center justify-center gap-2">
+            <span
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold
+                ${
+                  step === REGISTER_STEPS.FORM
+                    ? "bg-teal-600 text-white dark:bg-teal-700"
+                    : "bg-teal-100 text-teal-600 dark:bg-teal-900 dark:text-teal-400"
+                }`}
+            >
               1
-            </div>
-            <div className={`h-0.5 w-12 transition-all ${step === "otp" ? "bg-teal-600" : "bg-gray-200"}`} />
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
-              ${step === "otp" ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-400"}`}>
+            </span>
+            <span
+              className={`h-0.5 w-12 transition-colors
+                ${step === REGISTER_STEPS.OTP ? "bg-teal-600 dark:bg-teal-700" : "bg-gray-200 dark:bg-gray-700"}`}
+            />
+            <span
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold
+                ${
+                  step === REGISTER_STEPS.OTP
+                    ? "bg-teal-600 text-white dark:bg-teal-700"
+                    : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600"
+                }`}
+            >
               2
-            </div>
+            </span>
           </div>
 
-          {/* ── STEP 1: Register Form ── */}
-          {step === "register" && (
+          {/* ════════════════════════════════════════════════════════════════
+              STEP 1 — REGISTER FORM
+          ════════════════════════════════════════════════════════════════ */}
+          {step === REGISTER_STEPS.FORM && (
             <>
-              {/* Server error */}
               {registerData && !registerData.status && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{registerData.message}</p>
+                <div
+                  className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3
+                    dark:border-red-800 dark:bg-red-950"
+                >
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {registerData.message}
+                  </p>
                 </div>
               )}
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-                {/* Avatar */}
-                <div className="flex justify-center mb-2">
-                  <label className="cursor-pointer group relative">
-                    <div className={`w-20 h-20 rounded-full border-2 border-dashed flex items-center justify-center overflow-hidden transition-all
-                      ${avatarPreview ? "border-teal-400" : "border-gray-300 hover:border-teal-400 bg-gray-50"}`}>
+                {/* Avatar upload */}
+                <div className="mb-2 flex justify-center">
+                  <label className="group relative cursor-pointer">
+                    <div
+                      className={`flex h-20 w-20 items-center justify-center overflow-hidden
+                        rounded-full border-2 border-dashed transition-all
+                        ${
+                          avatarPreview
+                            ? "border-teal-400"
+                            : "border-gray-300 bg-gray-50 hover:border-teal-400 dark:border-gray-600 dark:bg-gray-800"
+                        }`}
+                    >
                       {avatarPreview ? (
                         <Image
                           src={avatarPreview}
                           alt="avatar"
                           width={80}
                           height={80}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                       ) : (
                         <div className="flex flex-col items-center gap-1">
-                          <Upload className="w-5 h-5 text-gray-400 group-hover:text-teal-500" />
+                          <Upload className="h-5 w-5 text-gray-400 group-hover:text-teal-500" />
                           <span className="text-xs text-gray-400">Photo</span>
                         </div>
                       )}
@@ -194,137 +236,129 @@ export default function RegisterPage() {
                 {/* First + Last name */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       First name
                     </label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       <input
-                        {...register("first_name")}
+                        {...formRegister("first_name")}
                         placeholder="Ahmed"
-                        className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm outline-none transition-all
-                          focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                          ${errors.first_name ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+                        className={`${inputBase} pl-9 pr-3 ${errors.first_name ? inputError : inputNormal}`}
                       />
                     </div>
                     {errors.first_name && (
-                      <p className="text-red-500 text-xs mt-1">{errors.first_name.message}</p>
+                      <p className="mt-1 text-xs text-red-500">{errors.first_name.message}</p>
                     )}
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Last name
                     </label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       <input
-                        {...register("last_name")}
+                        {...formRegister("last_name")}
                         placeholder="Ali"
-                        className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm outline-none transition-all
-                          focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                          ${errors.last_name ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+                        className={`${inputBase} pl-9 pr-3 ${errors.last_name ? inputError : inputNormal}`}
                       />
                     </div>
                     {errors.last_name && (
-                      <p className="text-red-500 text-xs mt-1">{errors.last_name.message}</p>
+                      <p className="mt-1 text-xs text-red-500">{errors.last_name.message}</p>
                     )}
                   </div>
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Email address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
-                      {...register("email")}
+                      {...formRegister("email")}
                       type="email"
                       placeholder="you@example.com"
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm outline-none transition-all
-                        focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                        ${errors.email ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+                      className={`${inputBase} pl-10 pr-4 ${errors.email ? inputError : inputNormal}`}
                     />
                   </div>
                   {errors.email && (
-                    <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
                   )}
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Phone number
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
-                      {...register("phone")}
+                      {...formRegister("phone")}
                       placeholder="05xxxxxxxx"
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm outline-none transition-all
-                        focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                        ${errors.phone ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+                      className={`${inputBase} pl-10 pr-4 ${errors.phone ? inputError : inputNormal}`}
                     />
                   </div>
                   {errors.phone && (
-                    <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>
                   )}
                 </div>
 
                 {/* Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
-                      {...register("password")}
+                      {...formRegister("password")}
                       type={showPassword ? "text" : "password"}
                       placeholder="Min. 8 characters"
-                      className={`w-full pl-10 pr-10 py-2.5 border rounded-xl text-sm outline-none transition-all
-                        focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                        ${errors.password ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+                      className={`${inputBase} pl-10 pr-10 ${errors.password ? inputError : inputNormal}`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
                   )}
                 </div>
 
-                {/* Confirm Password */}
+                {/* Confirm password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Confirm password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
-                      {...register("confirm_password")}
+                      {...formRegister("confirm_password")}
                       type={showConfirm ? "text" : "password"}
                       placeholder="••••••••"
-                      className={`w-full pl-10 pr-10 py-2.5 border rounded-xl text-sm outline-none transition-all
-                        focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                        ${errors.confirm_password ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+                      className={`${inputBase} pl-10 pr-10
+                        ${errors.confirm_password ? inputError : inputNormal}`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm(!showConfirm)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {errors.confirm_password && (
-                    <p className="text-red-500 text-xs mt-1">{errors.confirm_password.message}</p>
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.confirm_password.message}
+                    </p>
                   )}
                 </div>
 
@@ -332,110 +366,143 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={isRegistering}
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-xl
-                    transition-all duration-200 text-sm shadow-md hover:shadow-lg disabled:opacity-60 mt-2"
+                  className="mt-2 w-full rounded-xl bg-teal-600 py-2.5 text-sm font-semibold
+                    text-white shadow-md transition-all duration-200
+                    hover:bg-teal-700 hover:shadow-lg
+                    disabled:cursor-not-allowed disabled:opacity-60
+                    dark:bg-teal-700 dark:hover:bg-teal-600"
                 >
                   {isRegistering ? (
                     <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                       Creating account...
                     </span>
-                  ) : "Create account"}
+                  ) : (
+                    "Create account"
+                  )}
                 </button>
-
               </form>
 
-              <p className="text-center text-sm text-gray-500 mt-6">
+              <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
                 Already have an account?{" "}
-                <Link href="/login" className="text-teal-600 hover:text-teal-700 font-semibold">
+                <Link
+                  href={AUTH_ROUTES.LOGIN}
+                  className="font-semibold text-teal-600 hover:text-teal-700
+                    dark:text-teal-400 dark:hover:text-teal-300"
+                >
                   Sign in
                 </Link>
               </p>
             </>
           )}
 
-          {/* ── STEP 2: OTP Verification ── */}
-          {step === "otp" && (
+          {/* ════════════════════════════════════════════════════════════════
+              STEP 2 — OTP VERIFICATION
+          ════════════════════════════════════════════════════════════════ */}
+          {step === REGISTER_STEPS.OTP && (
             <div className="space-y-5">
 
-              {/* Dev mode OTP */}
+              {/* Dev-mode OTP badge */}
               {devOtp && (
-                <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-xl text-center">
-                  <p className="text-yellow-600 text-xs font-medium uppercase tracking-wide">
-                    🔧 Dev Mode — Your OTP
+                <div
+                  className="rounded-xl border border-yellow-300 bg-yellow-50 p-3 text-center
+                    dark:border-yellow-700 dark:bg-yellow-950"
+                >
+                  <p className="text-xs font-medium uppercase tracking-wide text-yellow-600 dark:text-yellow-400">
+                    Dev Mode — Your OTP
                   </p>
-                  <p className="text-yellow-800 text-3xl font-bold tracking-[0.5em] mt-1">
+                  <p className="mt-1 text-3xl font-bold tracking-[0.5em] text-yellow-800 dark:text-yellow-300">
                     {devOtp}
                   </p>
                 </div>
               )}
 
-              {/* Verify error */}
               {verifyMutation.data && !verifyMutation.data.status && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{verifyMutation.data.message}</p>
+                <div
+                  className="rounded-xl border border-red-200 bg-red-50 p-3
+                    dark:border-red-800 dark:bg-red-950"
+                >
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {verifyMutation.data.message}
+                  </p>
                 </div>
               )}
 
-              {/* Resend success */}
               {resendMutation.data?.status && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-600 text-sm">✅ New OTP sent successfully</p>
+                <div
+                  className="rounded-xl border border-green-200 bg-green-50 p-3
+                    dark:border-green-800 dark:bg-green-950"
+                >
+                  <p className="text-sm text-green-600 dark:text-green-400">
+                    New code sent successfully
+                  </p>
                 </div>
               )}
 
+              {/* Context */}
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-teal-50 rounded-2xl mb-3">
-                  <KeyRound className="w-7 h-7 text-teal-600" />
+                <div
+                  className="mb-3 inline-flex h-14 w-14 items-center justify-center
+                    rounded-2xl bg-teal-50 dark:bg-teal-900/40"
+                >
+                  <KeyRound className="h-7 w-7 text-teal-600 dark:text-teal-400" />
                 </div>
-                <p className="text-sm text-gray-500">Enter the 5-digit code sent to</p>
-                <p className="font-semibold text-gray-800">{registeredEmail}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Enter the code sent to
+                </p>
+                <p className="font-semibold text-gray-800 dark:text-white">
+                  {registeredEmail}
+                </p>
               </div>
 
-              {/* OTP Input */}
-              <div>
-                <input
-                  type="text"
-                  maxLength={5}
-                  value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, ""))}
-                  placeholder="_ _ _ _ _"
-                  className="w-full text-center text-2xl font-bold tracking-[0.5em] border-2 border-gray-200
-                    rounded-xl py-3 outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                    bg-gray-50"
-                />
-              </div>
+              {/* OTP input */}
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={OTP_CONFIG.LENGTH}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                placeholder={"_ ".repeat(OTP_CONFIG.LENGTH).trim()}
+                className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-3 text-center
+                  text-2xl font-bold tracking-[0.5em] outline-none transition-all
+                  focus:border-teal-500 focus:ring-2 focus:ring-teal-500
+                  dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-600"
+              />
 
               {/* Verify button */}
               <button
                 onClick={handleVerifyOtp}
-                disabled={otp.length !== 5 || verifyMutation.isPending}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-xl
-                  transition-all duration-200 text-sm shadow-md disabled:opacity-60"
+                disabled={otp.length !== OTP_CONFIG.LENGTH || verifyMutation.isPending}
+                className="w-full rounded-xl bg-teal-600 py-2.5 text-sm font-semibold
+                  text-white shadow-md transition-all duration-200
+                  hover:bg-teal-700 hover:shadow-lg
+                  disabled:cursor-not-allowed disabled:opacity-60
+                  dark:bg-teal-700 dark:hover:bg-teal-600"
               >
                 {verifyMutation.isPending ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     Verifying...
                   </span>
-                ) : "Verify email"}
+                ) : (
+                  "Verify email"
+                )}
               </button>
 
-              {/* Resend */}
-              <p className="text-center text-sm text-gray-500">
+              {/* Resend link */}
+              <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                 Didn&apos;t receive the code?{" "}
                 <button
                   onClick={handleResendOtp}
                   disabled={resendMutation.isPending}
-                  className="text-teal-600 hover:text-teal-700 font-semibold disabled:opacity-50"
+                  className="font-semibold text-teal-600 hover:text-teal-700
+                    disabled:opacity-50 dark:text-teal-400"
                 >
                   {resendMutation.isPending ? "Sending..." : "Resend"}
                 </button>
               </p>
-
             </div>
           )}
-
         </div>
       </div>
     </div>
