@@ -122,7 +122,7 @@ export default function RegisterPage() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div
-      className="flex min-h-screen items-center justify-center bg-gradient-to-br
+      className="flex min-h-screen items-center justify-center bg-linear-to-br
         from-teal-50 via-white to-cyan-50 p-4
         dark:from-gray-950 dark:via-gray-900 dark:to-gray-950"
     >
