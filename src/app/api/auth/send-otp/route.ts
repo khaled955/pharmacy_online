@@ -43,18 +43,30 @@ export async function POST(request: Request) {
 
     if (insertError) throw new Error(insertError.message);
 
-    const gmailUser = process.env.GMAIL_USER?.trim();
-    const gmailPass = process.env.GMAIL_APP_PASSWORD?.trim();
-
-    if (!gmailUser || !gmailPass) {
-      // Dev fallback — return OTP in response when Gmail is not configured
+    // In development, skip email sending entirely and return the OTP directly.
+    // Gmail SMTP from localhost is unreliable; the dev-OTP badge in the UI shows it instead.
+    if (process.env.NODE_ENV !== "production") {
       return NextResponse.json({
         status: true,
         message:
           locale === "ar"
             ? "تم إنشاء رمز التحقق (وضع التطوير)"
-            : "OTP generated (dev mode — set GMAIL_USER & GMAIL_APP_PASSWORD to send real emails)",
+            : "OTP generated (dev mode)",
         data: { email, otp },
+      });
+    }
+
+    const gmailUser = process.env.GMAIL_USER?.trim();
+    const gmailPass = process.env.GMAIL_APP_PASSWORD?.trim();
+
+    if (!gmailUser || !gmailPass) {
+      return NextResponse.json({
+        status: false,
+        message:
+          locale === "ar"
+            ? "إعدادات البريد الإلكتروني مفقودة"
+            : "Email credentials not configured",
+        data: null,
       });
     }
 

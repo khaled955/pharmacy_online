@@ -72,8 +72,9 @@ export async function loginAction(
 }
 
 // ── REGISTER ──────────────────────────────────────────────────────────────────
-// Uploads avatar (if provided), calls the register API route to create the
-// Supabase Auth user + profile row, then sends a verification OTP.
+// Uploads avatar (if provided), checks email availability, then sends a
+// verification OTP. The Supabase Auth user is NOT created here — it is created
+// in /api/auth/verify-otp only after the user proves email ownership.
 export async function registerAction(
   input: RegisterInput,
 ): Promise<AuthResponse<RegisterResponseData>> {
@@ -99,7 +100,7 @@ export async function registerAction(
       avatar_url = urlData.publicUrl
     }
 
-    // Create Supabase Auth user + profile via server-side API (uses service role)
+    // Check email availability (no user is created yet)
     const registerRes = await fetch(AUTH_API.REGISTER, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -107,13 +108,11 @@ export async function registerAction(
         first_name: input.first_name,
         last_name: input.last_name,
         email: input.email,
-        phone: input.phone,
         password: input.password,
-        avatar_url,
       }),
     })
 
-    const registerData: AuthResponse<RegisterResponseData> =
+    const registerData: AuthResponse<{ email: string }> =
       await registerRes.json()
     if (!registerData.status) throw new Error(registerData.message)
 
@@ -128,7 +127,8 @@ export async function registerAction(
       status: true,
       message: "OTP sent to your email",
       data: {
-        user: registerData.data.user,
+        email: input.email,
+        avatar_url,
         otp: otpData.data?.otp ?? null,
       },
     }
@@ -165,16 +165,33 @@ export async function sendOtpAction(input: {
 }
 
 // ── VERIFY OTP (register) ─────────────────────────────────────────────────────
-// Confirms the 5-digit code entered during the registration flow.
+// Confirms the 5-digit code and triggers user + profile creation on the server.
+// pendingUser contains the registration data collected before OTP was sent.
 export async function verifyRegisterOtpAction(
   email: string,
   otp: string,
+  pendingUser: {
+    first_name: string
+    last_name: string
+    phone?: string | null
+    password: string
+    avatar_url: string | null
+  },
 ): Promise<AuthResponse<VerifyOtpResponseData>> {
   try {
     const res = await fetch(AUTH_API.VERIFY_OTP, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, type: OTP_TYPES.REGISTER }),
+      body: JSON.stringify({
+        email,
+        otp,
+        type: OTP_TYPES.REGISTER,
+        first_name: pendingUser.first_name,
+        last_name: pendingUser.last_name,
+        phone: pendingUser.phone ?? null,
+        password: pendingUser.password,
+        avatar_url: pendingUser.avatar_url,
+      }),
     })
 
     return res.json()

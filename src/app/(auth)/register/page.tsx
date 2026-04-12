@@ -42,6 +42,16 @@ export default function RegisterPage() {
   const [otp, setOtp] = useState("")
   const [devOtp, setDevOtp] = useState<string | null>(null)
 
+  // Holds the registration data between step 1 and OTP verification.
+  // The Supabase user is created only after the OTP is confirmed.
+  const [pendingUser, setPendingUser] = useState<{
+    first_name: string
+    last_name: string
+    phone?: string | null
+    password: string
+    avatar_url: string | null
+  } | null>(null)
+
   // ── Password visibility toggles ───────────────────────────────────────────
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -55,8 +65,15 @@ export default function RegisterPage() {
   // Verify OTP submitted in step 2
   const verifyMutation = useMutation({
     mutationKey: MUTATION_KEYS.VERIFY_OTP,
-    mutationFn: ({ email, otp }: { email: string; otp: string }) =>
-      verifyRegisterOtpAction(email, otp),
+    mutationFn: ({
+      email,
+      otp,
+      pending,
+    }: {
+      email: string
+      otp: string
+      pending: NonNullable<typeof pendingUser>
+    }) => verifyRegisterOtpAction(email, otp, pending),
     onSuccess: (data) => {
       if (data.status) router.push(`${AUTH_ROUTES.LOGIN}?verified=true`)
     },
@@ -89,6 +106,14 @@ export default function RegisterPage() {
         setRegisteredEmail(values.email)
         const payload = data.data as RegisterResponseData
         if (payload?.otp) setDevOtp(payload.otp)
+        // Store registration data so verify-otp can create the user after confirmation
+        setPendingUser({
+          first_name: values.first_name,
+          last_name: values.last_name,
+          phone: values.phone ?? null,
+          password: values.password,
+          avatar_url: payload.avatar_url ?? null,
+        })
         setStep(REGISTER_STEPS.OTP)
       },
     })
@@ -103,7 +128,8 @@ export default function RegisterPage() {
   }
 
   function handleVerifyOtp() {
-    verifyMutation.mutate({ email: registeredEmail, otp })
+    if (!pendingUser) return
+    verifyMutation.mutate({ email: registeredEmail, otp, pending: pendingUser })
   }
 
   function handleResendOtp() {
@@ -122,9 +148,7 @@ export default function RegisterPage() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div
-      className="flex min-h-screen items-center justify-center bg-linear-to-br
-        from-teal-50 via-white to-cyan-50 p-4
-        dark:from-gray-950 dark:via-gray-900 dark:to-gray-950"
+      className="flex min-h-screen items-center justify-center bg-linear-to-br from-teal-50 via-white to-cyan-50 p-4 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950"
     >
       <div className="w-full max-w-md">
 

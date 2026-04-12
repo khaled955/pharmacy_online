@@ -43,7 +43,9 @@ export type LoginResponseData = {
 
 /** Data returned after a successful register (otp visible only in dev) */
 export type RegisterResponseData = {
-  user: AuthUser
+  email: string
+  /** Avatar URL uploaded to storage during the register step */
+  avatar_url: string | null
   /** OTP value — only present in NODE_ENV=development */
   otp?: string | null
 }
