@@ -26,10 +26,26 @@ export async function POST(request: Request) {
       });
     }
 
-    // For forgot-password OTPs, verify the account exists before sending
+    // For forgot-password OTPs, verify the account exists before sending.
+    // The JS SDK's listUsers() only returns the first page and doesn't support
+    // email filtering, so we call the GoTrue admin REST endpoint directly.
     if (type === "forgot_password") {
-      const { data: authUser } = await supabase.auth.admin.listUsers();
-      const userExists = authUser?.users?.some((u) => u.email === email);
+      const searchRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users?filter=${encodeURIComponent(email)}&per_page=1`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          },
+        },
+      );
+
+      if (!searchRes.ok) throw new Error("Failed to verify account");
+
+      const { users } = await searchRes.json() as { users?: { email?: string }[] };
+      const userExists = (users ?? []).some(
+        (u) => u.email?.toLowerCase() === email.toLowerCase(),
+      );
 
       if (!userExists) {
         return NextResponse.json({

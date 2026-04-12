@@ -166,7 +166,7 @@ export default function ForgotPasswordPage() {
 
   // ── Forms (one per step) ──────────────────────────────────────────────────
   const emailForm = useForm<ForgotPasswordEmailInput>({
-    defaultValues: { email: storedEmail ?? "" },
+    defaultValues: { email: "" },
     resolver: zodResolver(forgotPasswordEmailSchema),
   })
 
