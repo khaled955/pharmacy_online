@@ -75,7 +75,17 @@ export default function RegisterPage() {
       pending: NonNullable<typeof pendingUser>
     }) => verifyRegisterOtpAction(email, otp, pending),
     onSuccess: (data) => {
-      if (data.status) router.push(`${AUTH_ROUTES.LOGIN}?verified=true`)
+      if (data.status) {
+        // Reset to step 1 before navigating so the router cache restores a clean form
+        setStep(REGISTER_STEPS.FORM)
+        setOtp("")
+        setRegisteredEmail("")
+        setPendingUser(null)
+        setDevOtp(null)
+        setAvatarPreview(null)
+        resetForm()
+        router.push(`${AUTH_ROUTES.LOGIN}?verified=true`)
+      }
     },
   })
 
@@ -94,6 +104,7 @@ export default function RegisterPage() {
     register: formRegister,
     handleSubmit,
     setValue,
+    reset: resetForm,
     formState: { errors },
   } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) })
 
