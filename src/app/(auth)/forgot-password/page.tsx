@@ -6,14 +6,19 @@
 //   Step 1 — email:        user enters their email address
 //   Step 2 — otp:          user enters the 5-digit code sent to that email
 //   Step 3 — new_password: user sets a new password (authorised by httpOnly cookie)
+//
+// Resend cooldown: stored in localStorage so it survives page reloads.
+// If the user re-submits the same email while the timer is still active,
+// we skip the API call and jump straight to the OTP step.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Mail, KeyRound, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from "lucide-react"
+import { cn } from "@/lib/utils/tailwind-merge"
 
 import {
   useSendForgotPasswordOtp,
@@ -32,10 +37,14 @@ import {
   AUTH_ROUTES,
   FORGOT_PASSWORD_STEPS,
   OTP_CONFIG,
+  OTP_TYPES,
+  OTP_COOL_DOWN_KEY,
+  OTP_EMAIL_KEY,
+  COOL_DOWN_TIME,
   type ForgotPasswordStep,
 } from "@/lib/constants/auth"
 import { sendOtpAction } from "@/lib/auth/auth-service"
-import { OTP_TYPES } from "@/lib/constants/auth"
+import { useLocalStorage } from "@/hooks/shared/use-local-storage"
 
 // ── Step indicator helper ─────────────────────────────────────────────────────
 const STEP_ORDER: ForgotPasswordStep[] = [
@@ -80,11 +89,12 @@ function SubmitButton({
     <button
       type="submit"
       disabled={isPending}
-      className="mt-2 w-full rounded-xl bg-teal-600 py-2.5 text-sm font-semibold
-        text-white shadow-md transition-all duration-200
-        hover:bg-teal-700 hover:shadow-lg
-        disabled:cursor-not-allowed disabled:opacity-60
-        dark:bg-teal-700 dark:hover:bg-teal-600"
+      className={cn(
+        "mt-2 w-full rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-md",
+        "transition-all duration-200 hover:bg-teal-700 hover:shadow-lg",
+        "disabled:cursor-not-allowed disabled:opacity-60",
+        "dark:bg-teal-700 dark:hover:bg-teal-600",
+      )}
     >
       {isPending ? (
         <span className="flex items-center justify-center gap-2">
@@ -109,23 +119,54 @@ export default function ForgotPasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [resetSuccess, setResetSuccess] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+
+  // ── Cooldown — persisted in localStorage so it survives page reloads ──────
+  const {
+    storedValue: otpCooldown,
+    setValue: setCooldown,
+    removeValue: removeCooldown,
+  } = useLocalStorage<string | null>(OTP_COOL_DOWN_KEY, null)
+
+  const {
+    storedValue: storedEmail,
+    setValue: setStoredEmail,
+    removeValue: removeStoredEmail,
+  } = useLocalStorage<string | null>(OTP_EMAIL_KEY, null)
+
+  // Countdown in seconds — lazy-initialised from the stored expiry
+  const [countDown, setCountDown] = useState(() => {
+    if (!otpCooldown) return 0
+    return Math.max(
+      Math.floor((new Date(otpCooldown).getTime() - Date.now()) / 1000),
+      0,
+    )
+  })
+
+  // Tick every second while cooldown is active; clear when it reaches zero
+  useEffect(() => {
+    if (!otpCooldown) return
+    const interval = setInterval(() => {
+      setCountDown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          removeCooldown()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [otpCooldown]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const sendOtp = useSendForgotPasswordOtp()
   const verifyOtp = useVerifyForgotPasswordOtp()
   const resetPassword = useResetPassword()
 
-  // Resend OTP mutation — separate instance so it has independent pending state
-  const resendOtp = {
-    isPending: false, // controlled manually via sendOtpAction
-    trigger: async () => {
-      const res = await sendOtpAction({ email, type: OTP_TYPES.FORGOT_PASSWORD })
-      if (res.status && res.data?.otp) setDevOtp(res.data.otp)
-    },
-  }
-
   // ── Forms (one per step) ──────────────────────────────────────────────────
   const emailForm = useForm<ForgotPasswordEmailInput>({
+    defaultValues: { email: storedEmail ?? "" },
     resolver: zodResolver(forgotPasswordEmailSchema),
   })
 
@@ -139,9 +180,30 @@ export default function ForgotPasswordPage() {
 
   // ── Step 1 submit: send OTP ───────────────────────────────────────────────
   function onEmailSubmit(values: ForgotPasswordEmailInput) {
+    const timerActive = !!otpCooldown && new Date(otpCooldown) > new Date()
+    const isSameEmail = values.email === storedEmail
+
+    // Same email + timer still running → skip API, jump to OTP step
+    if (isSameEmail && timerActive) {
+      setEmail(values.email)
+      setStep(FORGOT_PASSWORD_STEPS.OTP)
+      return
+    }
+
+    // Different email + timer active → clear old cooldown + stored email
+    if (!isSameEmail && timerActive) {
+      removeCooldown()
+      removeStoredEmail()
+    }
+
+    // Send OTP (new email OR expired timer)
     sendOtp.mutate(values, {
       onSuccess: (data) => {
         if (!data.status) return
+        const expireTime = new Date(Date.now() + COOL_DOWN_TIME)
+        setCooldown(expireTime.toISOString())
+        setStoredEmail(values.email)
+        setCountDown(COOL_DOWN_TIME / 1000)
         setEmail(values.email)
         if (data.data?.otp) setDevOtp(data.data.otp)
         setStep(FORGOT_PASSWORD_STEPS.OTP)
@@ -165,11 +227,30 @@ export default function ForgotPasswordPage() {
     )
   }
 
+  // ── Step 2: resend OTP ────────────────────────────────────────────────────
+  async function handleResendOtp() {
+    setIsResending(true)
+    try {
+      const res = await sendOtpAction({ email, type: OTP_TYPES.FORGOT_PASSWORD })
+      if (res.status) {
+        const expireTime = new Date(Date.now() + COOL_DOWN_TIME)
+        setCooldown(expireTime.toISOString())
+        setCountDown(COOL_DOWN_TIME / 1000)
+        if (res.data?.otp) setDevOtp(res.data.otp)
+      }
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   // ── Step 3 submit: reset password ─────────────────────────────────────────
   function onPasswordSubmit(values: ForgotPasswordNewPasswordInput) {
     resetPassword.mutate(values, {
       onSuccess: (data) => {
         if (!data.status) return
+        // Clean up persisted OTP state
+        removeCooldown()
+        removeStoredEmail()
         setResetSuccess(true)
         // Redirect to login after a short delay so user sees success message
         setTimeout(() => router.push(AUTH_ROUTES.LOGIN), 2000)
@@ -370,17 +451,41 @@ export default function ForgotPasswordPage() {
                 />
               </form>
 
-              {/* Resend link */}
-              <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-                Didn&apos;t receive the code?{" "}
+              {/* Resend — shows countdown while cooldown is active */}
+              <div className="space-y-1 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Didn&apos;t receive the code?
+                </p>
+                {countDown > 0 ? (
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
+                    Resend in{" "}
+                    <span className="font-semibold text-teal-600 dark:text-teal-400">
+                      {countDown}s
+                    </span>
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={isResending}
+                    className="text-sm font-semibold text-teal-600 hover:text-teal-700
+                      disabled:opacity-50 dark:text-teal-400"
+                  >
+                    {isResending ? "Sending..." : "Resend"}
+                  </button>
+                )}
+              </div>
+
+              {/* Change email */}
+              <p className="text-center text-xs text-gray-400 dark:text-gray-500">
+                Wrong email?{" "}
                 <button
                   type="button"
-                  onClick={resendOtp.trigger}
-                  disabled={resendOtp.isPending}
+                  onClick={() => setStep(FORGOT_PASSWORD_STEPS.EMAIL)}
                   className="font-semibold text-teal-600 hover:text-teal-700
-                    disabled:opacity-50 dark:text-teal-400"
+                    dark:text-teal-400 dark:hover:text-teal-300"
                 >
-                  Resend
+                  Change it
                 </button>
               </p>
             </div>

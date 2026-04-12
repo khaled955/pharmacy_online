@@ -80,6 +80,14 @@ export const DB_TABLES = {
   OTP_RECORDS: "password_reset_otps",
 } as const
 
+// ── OTP resend cooldown ───────────────────────────────────────────────────────
+/** localStorage key that stores the cooldown expiry ISO string */
+export const OTP_COOL_DOWN_KEY = "otp_cooldown"
+/** localStorage key that stores the email an OTP was last sent to */
+export const OTP_EMAIL_KEY = "otp_email"
+/** Cooldown duration in milliseconds before the user can resend */
+export const COOL_DOWN_TIME = 60 * 1000 // 60 s
+
 // ── TanStack Query mutation keys ──────────────────────────────────────────────
 export const MUTATION_KEYS = {
   LOGIN: ["auth", "login"] as const,

@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   const locale = request.headers.get("Accept-Language") || "en";
 
   try {
-    const { email } = await request.json();
+    const { email, type } = await request.json();
 
     if (!email) {
       return NextResponse.json({
@@ -24,6 +24,23 @@ export async function POST(request: Request) {
           locale === "ar" ? "البريد الإلكتروني مطلوب" : "Email is required",
         data: null,
       });
+    }
+
+    // For forgot-password OTPs, verify the account exists before sending
+    if (type === "forgot_password") {
+      const { data: authUser } = await supabase.auth.admin.listUsers();
+      const userExists = authUser?.users?.some((u) => u.email === email);
+
+      if (!userExists) {
+        return NextResponse.json({
+          status: false,
+          message:
+            locale === "ar"
+              ? "لا يوجد حساب مرتبط بهذا البريد الإلكتروني"
+              : "No account found with this email address",
+          data: null,
+        });
+      }
     }
 
     const otp = generateOTP();

@@ -240,6 +240,14 @@ export async function verifyForgotPasswordOtpAction(
   }
 }
 
+// ── LOGOUT ────────────────────────────────────────────────────────────────────
+// Signs the user out via the browser Supabase client, which clears the local
+// session and the auth cookies set by @supabase/ssr.
+export async function logoutAction(): Promise<void> {
+  const supabase = createClient()
+  await supabase.auth.signOut({ scope: "local" })
+}
+
 // ── FORGOT PASSWORD — RESET PASSWORD ─────────────────────────────────────────
 // Uses the httpOnly cookie set in step 2 to authorise a password update
 // via the Supabase admin API (server-side only).
