@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// AUTH CONSTANTS
-// Single source of truth for all auth-related magic strings and config values.
-// Import from here — never hardcode these inline.
-// ─────────────────────────────────────────────────────────────────────────────
 
 // ── Route paths ───────────────────────────────────────────────────────────────
 export const AUTH_ROUTES = {
@@ -24,7 +19,7 @@ export const AUTH_API = {
 
 export type AuthApiEndpoint = (typeof AUTH_API)[keyof typeof AUTH_API]
 
-// ── OTP configuration ─────────────────────────────────────────────────────────
+// OTP configuration
 export const OTP_CONFIG = {
   /** Digit length of every OTP generated in this app */
   LENGTH: 5,
@@ -32,12 +27,12 @@ export const OTP_CONFIG = {
   EXPIRY_MINUTES: 10,
 } as const
 
-// ── Password policy ───────────────────────────────────────────────────────────
+//Password policy 
 export const PASSWORD_CONFIG = {
   MIN_LENGTH: 8,
 } as const
 
-// ── OTP types — disambiguate why an OTP was sent ─────────────────────────────
+// OTP types
 export const OTP_TYPES = {
   REGISTER: "register",
   FORGOT_PASSWORD: "forgot_password",
@@ -45,7 +40,7 @@ export const OTP_TYPES = {
 
 export type OtpType = (typeof OTP_TYPES)[keyof typeof OTP_TYPES]
 
-// ── Multi-step form step names ────────────────────────────────────────────────
+// Multi-step form step names 
 
 /** Steps for the register flow (form → otp) */
 export const REGISTER_STEPS = {
@@ -65,7 +60,7 @@ export const FORGOT_PASSWORD_STEPS = {
 export type ForgotPasswordStep =
   (typeof FORGOT_PASSWORD_STEPS)[keyof typeof FORGOT_PASSWORD_STEPS]
 
-// ── Cookie names ──────────────────────────────────────────────────────────────
+//Cookie names 
 export const AUTH_COOKIES = {
   /** Set after OTP is verified for forgot-password; authorises the reset-password call */
   PW_RESET_VERIFIED: "pw_reset_verified",
@@ -74,13 +69,13 @@ export const AUTH_COOKIES = {
 /** Minutes the pw_reset_verified cookie stays alive */
 export const RESET_COOKIE_EXPIRY_MINUTES = 15
 
-// ── Supabase table names ──────────────────────────────────────────────────────
+//Supabase table names
 export const DB_TABLES = {
   PROFILES: "profiles",
   OTP_RECORDS: "password_reset_otps",
 } as const
 
-// ── OTP resend cooldown ───────────────────────────────────────────────────────
+//OTP resend cooldown
 /** localStorage key that stores the cooldown expiry ISO string */
 export const OTP_COOL_DOWN_KEY = "otp_cooldown"
 /** localStorage key that stores the email an OTP was last sent to */
@@ -88,7 +83,7 @@ export const OTP_EMAIL_KEY = "otp_email"
 /** Cooldown duration in milliseconds before the user can resend */
 export const COOL_DOWN_TIME = 60 * 1000 // 60 s
 
-// ── TanStack Query mutation keys ──────────────────────────────────────────────
+//TanStack Query mutation keys
 export const MUTATION_KEYS = {
   LOGIN: ["auth", "login"] as const,
   REGISTER: ["auth", "register"] as const,
@@ -97,3 +92,5 @@ export const MUTATION_KEYS = {
   RESET_PASSWORD: ["auth", "reset-password"] as const,
   RESEND_OTP: ["auth", "resend-otp"] as const,
 } as const
+
+ export const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/

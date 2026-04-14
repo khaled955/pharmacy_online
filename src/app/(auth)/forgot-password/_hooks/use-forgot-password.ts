@@ -5,11 +5,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useMutation } from "@tanstack/react-query"
-import {
-  sendForgotPasswordOtpAction,
-  verifyForgotPasswordOtpAction,
-  resetPasswordAction,
-} from "@/lib/auth/auth-service"
+import { sendForgotPasswordOtpAction } from "@/lib/auth/send-forgot-password-otp.action"
+import { verifyForgotPasswordOtpAction } from "@/lib/auth/verify-forgot-password-otp.action"
+import { resetPasswordAction } from "@/lib/auth/reset-password.action"
 import { MUTATION_KEYS } from "@/lib/constants/auth"
 import type {
   ForgotPasswordEmailInput,

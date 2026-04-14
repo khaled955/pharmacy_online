@@ -1,16 +1,49 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// useLogin — TanStack mutation that authenticates via Supabase signInWithPassword
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useMutation } from "@tanstack/react-query"
-import { loginAction } from "@/lib/auth/auth-service"
-import { MUTATION_KEYS } from "@/lib/constants/auth"
-import type { LoginInput } from "@/lib/schemas/auth/login.schema"
-import type { AuthResponse, LoginResponseData, ErrorResponse } from "@/lib/types/auth"
+"use client"
+import { loginAction } from "@/lib/auth/login.action";
+import { LoginFields } from "@/lib/schemas/auth/login.schema";
+import { AuthResponse, LoginResponseData } from "@/lib/types/auth";
+import { useMutation } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 export function useLogin() {
-  return useMutation<AuthResponse<LoginResponseData>, ErrorResponse, LoginInput>({
-    mutationKey: MUTATION_KEYS.LOGIN,
-    mutationFn: (input) => loginAction(input),
-  })
+  // Hooks
+  const searchParams = useSearchParams();
+
+  // Get callbackUrl
+  const rawCallbackUrl = searchParams.get("callbackUrl");
+
+  //Security: prevent open redirect
+  const callbackUrl =
+    rawCallbackUrl && rawCallbackUrl.startsWith("/") ? rawCallbackUrl : "/";
+
+  const {
+    mutate: onLogin,
+    error: loginError,
+    isPending: loginIsPending,
+  } = useMutation<AuthResponse<LoginResponseData>, Error, LoginFields>({
+    mutationFn: async (loginFormValues) => {
+      const response = await loginAction(loginFormValues);
+
+      if (!response.status) {
+        throw new Error(response.message || "Login failed");
+      }
+
+      return response;
+    },
+    onSuccess: () => {
+      toast.success("Login successful! Redirecting...", {
+        duration: 2000,
+        onAutoClose: () => {
+          // redirect to callbackUrl
+          window.location.href = callbackUrl;
+        },
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Login failed. Please try again.");
+    },
+  });
+
+  return { onLogin, loginError, loginIsPending };
 }

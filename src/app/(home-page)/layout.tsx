@@ -1,16 +1,14 @@
-import Link from "next/link"
-import { ShieldCheck } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
-import { AUTH_ROUTES } from "@/lib/constants/auth"
-import LogoutButton from "@/components/layout/navbar/logout-button"
+import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { AUTH_ROUTES } from "@/lib/constants/auth";
+import LogoutButton from "@/components/layout/navbar/logout-button";
 
-export default async function WebsiteLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
-  const supabase = await createClient()
+export default async function WebsiteLayout({ children }: LayoutProp) {
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -52,5 +50,5 @@ export default async function WebsiteLayout({
       {/* ── Page content ── */}
       <main>{children}</main>
     </div>
-  )
+  );
 }
