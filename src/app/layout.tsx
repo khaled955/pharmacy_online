@@ -23,6 +23,7 @@ export default function RootLayout({ children }: LayoutProp) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <Providers>

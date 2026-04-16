@@ -10,7 +10,7 @@ export function useLogin() {
   // Hooks
   const searchParams = useSearchParams();
 
-  // Get callbackUrl
+  //Variables
   const rawCallbackUrl = searchParams.get("callbackUrl");
 
   //Security: prevent open redirect

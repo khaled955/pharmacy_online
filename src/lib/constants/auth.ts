@@ -1,5 +1,5 @@
 
-// ── Route paths ───────────────────────────────────────────────────────────────
+//Route paths 
 export const AUTH_ROUTES = {
   LOGIN: "/login",
   REGISTER: "/register",
@@ -8,7 +8,7 @@ export const AUTH_ROUTES = {
 
 export type AuthRoute = (typeof AUTH_ROUTES)[keyof typeof AUTH_ROUTES]
 
-// ── Internal API endpoints ────────────────────────────────────────────────────
+// Internal API endpoints
 export const AUTH_API = {
   LOGIN: "/api/auth/login",
   REGISTER: "/api/auth/register",

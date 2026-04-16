@@ -5,6 +5,7 @@ import {
   BadgeCheck,
   Truck,
 } from "lucide-react";
+import ThemeToggle from "@/components/layout/navbar/theme-toggle";
 
 const features = [
   {
@@ -31,7 +32,11 @@ const features = [
 
 export default function AuthLayout({ children }: LayoutProp) {
   return (
-    <div className="flex min-h-screen">
+    <div className="relative flex min-h-screen">
+      {/* ── Theme toggle — floats over both panels ── */}
+      <div className="absolute right-4 top-4 z-50">
+        <ThemeToggle />
+      </div>
       {/* ══════════════════════════════════════════════════════════════
           LEFT PANEL — visible on lg+ screens
       ══════════════════════════════════════════════════════════════ */}
