@@ -2,9 +2,7 @@ import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth"
 import type { ForgotPasswordOtpInput } from "@/lib/schemas/auth/forgot-password.schema"
 import type { AuthResponse, VerifyOtpResponseData } from "@/lib/types/auth"
 
-// ── FORGOT PASSWORD — VERIFY OTP ─────────────────────────────────────────────
-// Checks the code entered in step 2. On success the server sets a short-lived
-// httpOnly cookie that authorises the password-reset call in step 3.
+// ── FORGOT PASSWORD — VERIFY OTP 
 export async function verifyForgotPasswordOtpAction(
   email: string,
   input: ForgotPasswordOtpInput,

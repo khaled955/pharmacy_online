@@ -154,7 +154,7 @@ function FieldWrapper({
       {label && (
         <label
           htmlFor={id}
-          className={cn(labelClasses, error && "text-destructive")}
+          className={cn(labelClasses)}
         >
           {label}
         </label>

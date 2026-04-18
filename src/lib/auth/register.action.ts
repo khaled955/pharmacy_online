@@ -1,63 +1,62 @@
-import { createClient } from "@/lib/supabase/client"
-import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth"
-import type { RegisterInput } from "@/lib/schemas/auth/register.schema"
-import type { AuthResponse, RegisterResponseData } from "@/lib/types/auth"
-import { sendOtpAction } from "./send-otp.action"
-import { toast } from "sonner"
+"use server";
+import { OTP_TYPES } from "@/lib/constants/auth";
+import type { AuthResponse, RegisterResponseData } from "@/lib/types/auth";
+import { sendOtpAction } from "./send-otp.action";
+import { RegisterFormValues } from "../schemas/auth/register.schema";
+import { createClient } from "../supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
-// ── REGISTER ──────────────────────────────────────────────────────────────────
-// Uploads avatar (if provided), checks email availability, then sends a
-// verification OTP. The Supabase Auth user is NOT created here — it is created
-// in /api/auth/verify-otp only after the user proves email ownership.
 export async function registerAction(
-  input: RegisterInput,
+  input: RegisterFormValues,
 ): Promise<AuthResponse<RegisterResponseData>> {
-  const supabase = createClient()
+  const supabase = await createClient();
 
   try {
     // Upload avatar to Supabase Storage when a file was selected
-    let avatar_url: string | null = null
+    let avatar_url: string | null = null;
     if (input.avatar) {
-      const fileExt = input.avatar.name.split(".").pop()
-      const fileName = `avatars/${Date.now()}.${fileExt}`
+      const fileExt = input.avatar.name.split(".").pop();
+      const fileName = `avatars/${Date.now()}.${fileExt}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("product-images")
-        .upload(fileName, input.avatar)
+        .upload(fileName, input.avatar);
 
-      if (uploadError) throw new Error(uploadError.message)
+      if (uploadError) throw new Error(uploadError.message);
 
       const { data: urlData } = supabase.storage
         .from("product-images")
-        .getPublicUrl(uploadData.path)
+        .getPublicUrl(uploadData.path);
 
-      avatar_url = urlData.publicUrl
+      avatar_url = urlData.publicUrl;
     }
 
-    // Check email availability (no user is created yet)
-    const registerRes = await fetch(AUTH_API.REGISTER, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        first_name: input.first_name,
-        last_name: input.last_name,
-        email: input.email,
-        password: input.password,
-      }),
-    })
+    // Check email availability directly via service-role client (no HTTP hop)
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data: existingUser } = await serviceClient
+      .schema("auth")
+      .from("users")
+      .select("id")
+      .eq("email", input.email)
+      .maybeSingle();
 
-    const registerData: AuthResponse<{ email: string }> =
-      await registerRes.json()
-    if (!registerData.status) throw new Error(registerData.message)
+    if (existingUser) {
+      return {
+        status: false,
+        message: "Email already registered",
+        data: null,
+      };
+    }
 
     // Send verification OTP to the user's email
     const otpData = await sendOtpAction({
       email: input.email,
       type: OTP_TYPES.REGISTER,
-    })
-    if (!otpData.status) throw new Error(otpData.message)
-
-    toast.success("OTP sent to your email")
+    });
+    if (!otpData.status) throw new Error(otpData.message);
 
     return {
       status: true,
@@ -67,12 +66,12 @@ export async function registerAction(
         avatar_url,
         otp: otpData.data?.otp ?? null,
       },
-    }
+    };
   } catch (err: unknown) {
     return {
       status: false,
       message: err instanceof Error ? err.message : "Registration failed",
       data: null,
-    }
+    };
   }
 }

@@ -1,9 +1,7 @@
 import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth"
 import type { AuthResponse, VerifyOtpResponseData } from "@/lib/types/auth"
 
-// ── VERIFY OTP (register) ─────────────────────────────────────────────────────
-// Confirms the 5-digit code and triggers user + profile creation on the server.
-// pendingUser contains the registration data collected before OTP was sent.
+//VERIFY OTP (register) 
 export async function verifyRegisterOtpAction(
   email: string,
   otp: string,

@@ -1,8 +1,3 @@
-// POST /api/auth/register
-// Validates input and checks whether the email is already registered.
-// Does NOT create the Supabase Auth user — that happens in /api/auth/verify-otp
-// once the user proves ownership of their email address.
-
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 

@@ -21,6 +21,7 @@ export function useLogin() {
     mutate: onLogin,
     error: loginError,
     isPending: loginIsPending,
+    reset: resetLogin,
   } = useMutation<AuthResponse<LoginResponseData>, Error, LoginFields>({
     mutationFn: async (loginFormValues) => {
       const response = await loginAction(loginFormValues);
@@ -45,5 +46,5 @@ export function useLogin() {
     },
   });
 
-  return { onLogin, loginError, loginIsPending };
+  return { onLogin, loginError, loginIsPending, resetLogin };
 }

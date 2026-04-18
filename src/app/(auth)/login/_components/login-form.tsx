@@ -1,28 +1,36 @@
 "use client";
+import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { AUTH_ROUTES } from "@/lib/constants/auth";
-import { LoginFields, loginSchema } from "@/lib/schemas/auth/login.schema";
+import { LoginFields, useLoginSchema } from "@/lib/schemas/auth/login.schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLogin } from "../_hooks/use-login";
+import { cn } from "@/lib/utils/tailwind-merge";
 
 export default function LoginForm() {
   // Mutation
-  const { loginError, loginIsPending, onLogin } = useLogin();
+  const { loginError, loginIsPending, onLogin, resetLogin } = useLogin();
 
   // RHF
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<LoginFields>({
-    resolver: zodResolver(loginSchema),
-    mode: "onBlur",
+    resolver: zodResolver(useLoginSchema()),
+    mode: "onChange",
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
+ 
   // Handler
   const onSubmit: SubmitHandler<LoginFields> = (values) => {
     onLogin(values);
@@ -58,8 +66,10 @@ export default function LoginForm() {
           <div className="mb-1.5 flex items-center justify-end">
             <Link
               href={AUTH_ROUTES.FORGOT_PASSWORD}
-              className="text-xs font-medium text-teal-600 hover:text-teal-700
-                    dark:text-teal-400 dark:hover:text-teal-300"
+              className={cn(
+                "text-xs font-medium text-teal-600 hover:text-teal-700",
+                "dark:text-teal-400 dark:hover:text-teal-300",
+              )}
             >
               Forgot password?
             </Link>
@@ -88,8 +98,10 @@ export default function LoginForm() {
           Dont have an account?
           <Link
             href={AUTH_ROUTES.REGISTER}
-            className="font-semibold text-teal-600 hover:text-teal-700
-                dark:text-teal-400 dark:hover:text-teal-300"
+            className={cn(
+              "font-semibold text-teal-600 hover:text-teal-700",
+              "dark:text-teal-400 dark:hover:text-teal-300",
+            )}
           >
             Create one
           </Link>

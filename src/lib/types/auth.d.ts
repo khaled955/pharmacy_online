@@ -1,3 +1,5 @@
+import { LucideIcon } from "lucide-react";
+
 export type UserRole = "customer" | "admin";
 
 export type AuthUser = {
@@ -45,3 +47,11 @@ export type VerifyOtpResponseData = {
 };
 
 export type ResetPasswordResponseData = null;
+
+export type AuthFeature = {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+};
+
+

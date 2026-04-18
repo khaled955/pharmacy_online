@@ -2,9 +2,7 @@ import { AUTH_API } from "@/lib/constants/auth"
 import type { ForgotPasswordNewPasswordInput } from "@/lib/schemas/auth/forgot-password.schema"
 import type { AuthResponse, ResetPasswordResponseData } from "@/lib/types/auth"
 
-// ── FORGOT PASSWORD — RESET PASSWORD ─────────────────────────────────────────
-// Uses the httpOnly cookie set in step 2 to authorise a password update
-// via the Supabase admin API (server-side only).
+// ── FORGOT PASSWORD — RESET PASSWORD 
 export async function resetPasswordAction(
   input: ForgotPasswordNewPasswordInput,
 ): Promise<AuthResponse<ResetPasswordResponseData>> {

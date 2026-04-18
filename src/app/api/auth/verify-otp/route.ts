@@ -1,9 +1,4 @@
-// POST /api/auth/verify-otp
-// Validates the submitted OTP against the DB record (checks code, expiry, used).
-//
-// register flow:      creates the Supabase Auth user + profile after verification.
-// forgot_password flow: sets a short-lived httpOnly cookie that authorises the
-//                       subsequent reset-password call.
+
 
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
