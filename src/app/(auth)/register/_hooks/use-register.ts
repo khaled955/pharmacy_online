@@ -20,6 +20,12 @@ type PendingUser = {
   avatar_url: string | null;
 };
 
+type RegisterVerifyOtp = {
+  email: string;
+  otp: string;
+  pending: PendingUser;
+};
+
 // ── Step 1: submit registration form — uploads avatar + sends OTP
 export function useRegister() {
   return useMutation<
@@ -36,7 +42,7 @@ export function useVerifyRegisterOtp() {
   return useMutation<
     AuthResponse<VerifyOtpResponseData>,
     Error,
-    { email: string; otp: string; pending: PendingUser }
+    RegisterVerifyOtp
   >({
     mutationFn: ({ email, otp, pending }) =>
       verifyRegisterOtpAction(email, otp, pending),

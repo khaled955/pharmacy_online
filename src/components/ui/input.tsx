@@ -130,6 +130,16 @@ function getDefaultIcon(type?: string) {
   }
 }
 
+function useMounted() {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return mounted;
+}
+
 // Field Wrapper
 
 type FieldWrapperProps = {
@@ -152,10 +162,7 @@ function FieldWrapper({
   return (
     <div className={cn(fieldWrapperClasses, className)}>
       {label && (
-        <label
-          htmlFor={id}
-          className={cn(labelClasses)}
-        >
+        <label htmlFor={id} className={cn(labelClasses)}>
           {label}
         </label>
       )}
@@ -192,10 +199,13 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
     },
     ref,
   ) => {
+    const mounted = useMounted();
+
     const [showPassword, setShowPassword] = React.useState(false);
     const [isFocused, setIsFocused] = React.useState(false);
 
     const isMouseDownRef = React.useRef(false);
+    const localInputRef = React.useRef<HTMLInputElement | null>(null);
 
     const generatedId = React.useId();
     const inputId = externalId ?? generatedId;
@@ -206,7 +216,16 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
 
     void _type;
 
-    // Keep focus state stable when clicking action buttons inside the field
+    const setRefs = (node: HTMLInputElement | null) => {
+      localInputRef.current = node;
+
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    };
+
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
       if (!isMouseDownRef.current) {
         setIsFocused(false);
@@ -216,14 +235,11 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
       onBlur?.(e);
     };
 
-    // Generate a strong password and dispatch a native input event
     const handleGenerate = () => {
       const password = generateStrongPassword();
       setShowPassword(true);
 
-      const nativeInput = document.getElementById(
-        inputId,
-      ) as HTMLInputElement | null;
+      const nativeInput = localInputRef.current;
 
       if (!nativeInput) return;
 
@@ -265,7 +281,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
               <input
                 {...props}
                 id={inputId}
-                ref={ref}
+                ref={setRefs}
                 type={showPassword ? "text" : "password"}
                 data-slot="input"
                 disabled={disabled}
@@ -274,6 +290,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
                 onBlur={handleBlur}
                 aria-invalid={!!error}
                 aria-describedby={errorId}
+                suppressHydrationWarning
                 className={cn(innerInputClasses, "px-3 pe-11", inputClassName)}
               />
             </div>
@@ -286,6 +303,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
               aria-label={showPassword ? labels.hide : labels.show}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => setShowPassword((prev) => !prev)}
+              suppressHydrationWarning
               className={cn(
                 "absolute inset-e-3 top-1/2 -translate-y-1/2",
                 "inline-flex size-8 items-center justify-center rounded-full",
@@ -304,7 +322,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
             </button>
           </div>
 
-          {mood === "create" && (
+          {mounted && mood === "create" && (
             <div
               className={cn(
                 "grid transition-all duration-200 ease-in-out",
@@ -319,6 +337,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
                   tabIndex={-1}
                   disabled={disabled}
                   onClick={handleGenerate}
+                  suppressHydrationWarning
                   className={cn(
                     "mt-1 inline-flex items-center gap-1.5 rounded-md",
                     "text-xs font-medium text-start",
@@ -412,6 +431,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               disabled={disabled}
               aria-invalid={!!error}
               aria-describedby={errorId}
+              suppressHydrationWarning
               className={cn(innerInputClasses, "px-3", inputClassName)}
               {...props}
             />
@@ -435,6 +455,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           disabled={disabled}
           aria-invalid={!!error}
           aria-describedby={errorId}
+          suppressHydrationWarning
           className={cn(
             plainInputClasses,
             error && wrapperErrorClasses,

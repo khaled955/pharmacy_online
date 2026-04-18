@@ -31,7 +31,7 @@ export async function registerAction(
       avatar_url = urlData.publicUrl;
     }
 
-    // Check email availability directly via service-role client (no HTTP hop)
+    // Check email availability before sending OTP
     const serviceClient = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,

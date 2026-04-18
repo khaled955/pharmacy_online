@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { loginAction } from "@/lib/auth/login.action";
 import { LoginFields } from "@/lib/schemas/auth/login.schema";
 import { AuthResponse, LoginResponseData } from "@/lib/types/auth";
@@ -21,7 +21,6 @@ export function useLogin() {
     mutate: onLogin,
     error: loginError,
     isPending: loginIsPending,
-    reset: resetLogin,
   } = useMutation<AuthResponse<LoginResponseData>, Error, LoginFields>({
     mutationFn: async (loginFormValues) => {
       const response = await loginAction(loginFormValues);
@@ -36,7 +35,7 @@ export function useLogin() {
       toast.success("Login successful! Redirecting...", {
         duration: 2000,
         onAutoClose: () => {
-          // redirect to callbackUrl
+          // redirect to callbackUrl or homepage
           window.location.href = callbackUrl;
         },
       });
@@ -46,5 +45,5 @@ export function useLogin() {
     },
   });
 
-  return { onLogin, loginError, loginIsPending, resetLogin };
+  return { onLogin, loginError, loginIsPending };
 }

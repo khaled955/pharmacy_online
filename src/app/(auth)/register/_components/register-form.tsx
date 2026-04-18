@@ -41,14 +41,17 @@ type PendingUser = {
 };
 
 export default function RegisterForm() {
+  // Navigation
   const router = useRouter();
 
-  // Step state
+  // State
   const [step, setStep] = useState<RegisterStep>(REGISTER_STEPS.FORM);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [pendingUser, setPendingUser] = useState<PendingUser | null>(null);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
 
   // Mutations
   const registerMutation = useRegister();
@@ -60,9 +63,20 @@ export default function RegisterForm() {
     register: formRegister,
     handleSubmit,
     setValue,
-    formState: { errors },
+    resetField,
+    formState: { errors, isSubmitted, isValid },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(useRegisterSchema()),
+    mode: "onChange",
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirm_password: "",
+      avatar: undefined,
+    },
   });
 
   // Step 2 — OTP form
@@ -73,9 +87,13 @@ export default function RegisterForm() {
     formState: { errors: otpErrors },
   } = useForm<ForgotPasswordOtpInput>({
     resolver: zodResolver(useForgotPasswordOtpSchema()),
+    mode: "onChange",
+    defaultValues: {
+      otp: "",
+    },
   });
 
-  // ── Handlers ──────────────────────────────────────────────────
+  // Handlers
 
   const onSubmit: SubmitHandler<RegisterFormValues> = (values) => {
     registerMutation.mutate(values, {
@@ -84,9 +102,13 @@ export default function RegisterForm() {
           toast.error(data.message);
           return;
         }
+
         const payload = data.data as RegisterResponseData;
+
         setRegisteredEmail(values.email);
+
         if (payload?.otp) setDevOtp(payload.otp);
+
         setPendingUser({
           first_name: values.first_name,
           last_name: values.last_name,
@@ -94,6 +116,7 @@ export default function RegisterForm() {
           password: values.password,
           avatar_url: payload.avatar_url ?? null,
         });
+
         toast.success("OTP sent to your email");
         setStep(REGISTER_STEPS.OTP);
       },
@@ -102,6 +125,7 @@ export default function RegisterForm() {
 
   const onOtpSubmit: SubmitHandler<ForgotPasswordOtpInput> = ({ otp }) => {
     if (!pendingUser) return;
+
     verifyMutation.mutate(
       { email: registeredEmail, otp, pending: pendingUser },
       {
@@ -110,6 +134,7 @@ export default function RegisterForm() {
             toast.error(data.message);
             return;
           }
+
           router.push(`${AUTH_ROUTES.LOGIN}?verified=true`);
         },
       },
@@ -130,7 +155,6 @@ export default function RegisterForm() {
   };
 
   const onBack = () => {
-    // Return to step 1 keeping form data — user can resubmit same or new data
     registerMutation.reset();
     verifyMutation.reset();
     resendMutation.reset();
@@ -141,14 +165,36 @@ export default function RegisterForm() {
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      setValue("avatar", file);
-      setAvatarPreview(URL.createObjectURL(file));
-    }
+    if (!file) return;
+
+    setValue("avatar", file, { shouldValidate: true, shouldDirty: true });
+    setAvatarPreview(URL.createObjectURL(file));
+
+    // Mock upload progress until real upload is connected
+    setIsAvatarUploading(true);
+    setAvatarUploadProgress(0);
+
+    let progress = 0;
+
+    const interval = setInterval(() => {
+      progress += 20;
+      setAvatarUploadProgress(progress);
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        setIsAvatarUploading(false);
+      }
+    }, 150);
   }
 
-  // ── Derived error messages ────────────────────────────────────
+  function handleAvatarRemove() {
+    resetField("avatar");
+    setAvatarPreview(null);
+    setAvatarUploadProgress(0);
+    setIsAvatarUploading(false);
+  }
 
+  // Derived error messages
   const step1ServerError =
     registerMutation.data && !registerMutation.data.status
       ? registerMutation.data.message
@@ -159,18 +205,19 @@ export default function RegisterForm() {
       ? verifyMutation.data.message
       : null;
 
-  // ── Render ────────────────────────────────────────────────────
-
   return (
     <div className="w-full max-w-md">
-      {/* Logo + headings */}
       <div className="mb-8 text-center">
         <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg dark:bg-teal-700">
           <ShieldCheck className="h-8 w-8 text-white" />
         </div>
+
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {step === REGISTER_STEPS.FORM ? "Create account" : "Verify your email"}
+          {step === REGISTER_STEPS.FORM
+            ? "Create account"
+            : "Verify your email"}
         </h1>
+
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {step === REGISTER_STEPS.FORM
             ? "Join our pharmacy platform today"
@@ -178,7 +225,6 @@ export default function RegisterForm() {
         </p>
       </div>
 
-      {/* Card */}
       <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl dark:border-gray-800 dark:bg-gray-900">
         <RegisterStepIndicator step={step} />
 
@@ -190,7 +236,12 @@ export default function RegisterForm() {
             serverError={step1ServerError}
             avatarPreview={avatarPreview}
             onAvatarChange={handleAvatarChange}
+            onAvatarRemove={handleAvatarRemove}
+            isAvatarUploading={isAvatarUploading}
+            avatarUploadProgress={avatarUploadProgress}
             onSubmit={handleSubmit(onSubmit)}
+            isValid={isValid}
+            isSubmitted={isSubmitted}
           />
         )}
 

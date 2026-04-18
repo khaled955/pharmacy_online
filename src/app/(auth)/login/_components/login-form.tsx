@@ -1,5 +1,4 @@
 "use client";
-import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -13,14 +12,14 @@ import { cn } from "@/lib/utils/tailwind-merge";
 
 export default function LoginForm() {
   // Mutation
-  const { loginError, loginIsPending, onLogin, resetLogin } = useLogin();
+  const { loginError, loginIsPending, onLogin } = useLogin();
 
   // RHF
   const {
     register,
     handleSubmit,
-    reset,
-    formState: { errors },
+
+    formState: { errors, isSubmitted, isValid },
   } = useForm<LoginFields>({
     resolver: zodResolver(useLoginSchema()),
     mode: "onChange",
@@ -30,7 +29,6 @@ export default function LoginForm() {
     },
   });
 
- 
   // Handler
   const onSubmit: SubmitHandler<LoginFields> = (values) => {
     onLogin(values);
@@ -88,6 +86,7 @@ export default function LoginForm() {
             isLoading={loginIsPending}
             type="submit"
             serverError={loginError?.message}
+            disabled={!isValid && isSubmitted}
           >
             Login
           </Button>
