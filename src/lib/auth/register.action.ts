@@ -1,7 +1,7 @@
 "use server";
 import { OTP_TYPES } from "@/lib/constants/auth";
 import type { AuthResponse, RegisterResponseData } from "@/lib/types/auth";
-import { sendOtpAction } from "./send-otp.action";
+import { sendOtpService } from "./send-otp.service";
 import { RegisterFormValues } from "../schemas/auth/register.schema";
 import { createClient } from "../supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -52,10 +52,7 @@ export async function registerAction(
     }
 
     // Send verification OTP to the user's email
-    const otpData = await sendOtpAction({
-      email: input.email,
-      type: OTP_TYPES.REGISTER,
-    });
+    const otpData = await sendOtpService(input.email, OTP_TYPES.REGISTER);
     if (!otpData.status) throw new Error(otpData.message);
 
     return {
