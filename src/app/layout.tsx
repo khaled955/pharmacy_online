@@ -14,22 +14,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pharmacy Online",
-  description: "online pharmacy store for displaying medicines and cosmotics",
+  title: {
+    default: "MedBox — Your Online Pharmacy",
+    template: "%s | MedBox Pharmacy",
+  },
+  description:
+    "Order medicines, vitamins, skincare and wellness essentials online with fast delivery, trusted products, and expert pharmacy support.",
+  keywords: ["pharmacy", "online pharmacy", "medicines", "vitamins", "health"],
 };
 
 export default function RootLayout({ children }: LayoutProp) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
-        <Providers>
-          <div>{children}</div>
-        </Providers>
-
+      <body className="min-h-full antialiased">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

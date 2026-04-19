@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(pnpm add:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Read(//f/nextProjects/f--nextProjects-pharmacy-online/**)",
+      "Bash(xargs grep *)"
     ]
   }
 }

@@ -7,10 +7,9 @@ import { cn } from "@/lib/utils/tailwind-merge";
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  // Prevent hydration mismatch — render nothing until mounted on client
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  if (!mounted) return <div className="h-9 w-9" aria-hidden="true" />;
 
   const isDark = theme === "dark";
 
@@ -19,11 +18,13 @@ export default function ThemeToggle() {
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-xl border transition-all",
-        "border-gray-200 bg-white text-gray-600 shadow-sm",
-        "hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600",
-        "dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300",
-        "dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-400",
+        "flex h-9 w-9 items-center justify-center rounded-xl border",
+        "border-border bg-card text-muted-foreground",
+        "shadow-sm transition-all duration-200",
+        "hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+        "dark:border-border dark:bg-surface",
+        "dark:hover:border-primary/30 dark:hover:bg-primary/10 dark:hover:text-primary",
       )}
     >
       {isDark ? (
