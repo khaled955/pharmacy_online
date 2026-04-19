@@ -14,11 +14,10 @@ export async function getProductBySlug(
     .eq("is_active", true)
     .single();
 
-  if (error || !data) {
-    if (error?.code !== "PGRST116") {
-      console.error("[getProductBySlug]", error?.message);
-    }
-    return null;
+  if (error) {
+    // PGRST116 = no rows found → treat as 404, not an error
+    if (error.code === "PGRST116") return null;
+    throw new Error(`[getProductBySlug] ${error.message}`);
   }
 
   return data as unknown as ProductDetailsData;

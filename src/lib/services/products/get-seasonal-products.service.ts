@@ -1,12 +1,11 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { ProductCardData } from "@/lib/types/product";
-
-const CARD_SELECT = [
-  "id", "slug", "name_en", "name_ar", "price", "original_price",
-  "stock", "image_url", "avg_rating", "reviews_count", "brand",
-  "is_on_promotion", "promotion_label_en", "is_best_seller",
-].join(", ");
+import {
+  PRODUCT_CARD_SELECT,
+  mapProductCardRow,
+  throwOnDbError,
+} from "./_product-helpers";
 
 export async function getSeasonalProducts(
   tag: string,
@@ -16,18 +15,15 @@ export async function getSeasonalProducts(
 
   const { data, error } = await supabase
     .from("products")
-    .select(CARD_SELECT)
+    .select(PRODUCT_CARD_SELECT)
     .eq("is_active", true)
     .eq("seasonal_tag", tag)
     .order("display_priority", { ascending: true, nullsFirst: false })
     .order("avg_rating", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(limit)
+    .overrideTypes<ProductCardData[]>();
 
-  if (error) {
-    console.error("[getSeasonalProducts]", error.message);
-    return [];
-  }
-
-  return (data as ProductCardData[]) ?? [];
+  throwOnDbError(error, "getSeasonalProducts");
+  return (data ?? []).map(mapProductCardRow);
 }

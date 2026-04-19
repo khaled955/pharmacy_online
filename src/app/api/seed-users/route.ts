@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-
+// 
 type SeedUser = {
   first_name: string;
   last_name: string;

@@ -203,9 +203,15 @@ export default function HomeFooter() {
       {/* ── Bottom bar ── */}
       <div className="section-container py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            © 2025 MedBox Pharmacy. All rights reserved.
-          </p>
+          <div className="flex flex-col gap-0.5">
+            <p className="text-xs text-muted-foreground">
+              © 2025 MedBox Pharmacy. All rights reserved.
+            </p>
+            <p className="text-xs text-muted-foreground/60">
+              Established &amp; designed by{" "}
+              <span className="font-medium text-muted-foreground">Khaled</span>
+            </p>
+          </div>
           <div className="flex items-center gap-4">
             <Link
               href="/privacy"

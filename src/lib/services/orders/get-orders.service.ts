@@ -2,27 +2,105 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { OrderRow, OrderWithItems } from "@/lib/types/order";
 
-export async function getOrders(userId: string, limit = 20): Promise<OrderRow[]> {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type RecentOrderItemRow = {
+  product_name_en: string;
+  quantity: number;
+};
+
+type RecentOrderRow = Pick<
+  OrderRow,
+  "id" | "order_number" | "status" | "total_amount" | "created_at"
+> & {
+  order_items: RecentOrderItemRow[];
+};
+
+type OrderItemRow = {
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_code: string | null;
+  product_name_en: string;
+  product_name_ar: string;
+  product_image_url: string | null;
+  unit_price: number;
+  quantity: number;
+  line_total: number;
+  created_at: string;
+};
+
+type OrderWithItemsRow = OrderRow & {
+  order_items: OrderItemRow[];
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function mapOrderRow(row: OrderRow): OrderRow {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    order_number: row.order_number,
+    status: row.status,
+    payment_status: row.payment_status,
+    payment_method: row.payment_method,
+    subtotal: row.subtotal,
+    shipping_fee: row.shipping_fee,
+    discount_amount: row.discount_amount,
+    total_amount: row.total_amount,
+    customer_name: row.customer_name,
+    customer_phone: row.customer_phone,
+    city: row.city,
+    area: row.area,
+    street_address: row.street_address,
+    notes: row.notes,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+// ─── Queries ──────────────────────────────────────────────────────────────────
+
+export async function getOrders(
+  userId: string,
+  limit = 20,
+): Promise<OrderRow[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "id, user_id, order_number, status, payment_status, payment_method, " +
-      "subtotal, shipping_fee, discount_amount, total_amount, " +
-      "customer_name, customer_phone, city, area, street_address, notes, " +
-      "created_at, updated_at",
+      `
+        id,
+        user_id,
+        order_number,
+        status,
+        payment_status,
+        payment_method,
+        subtotal,
+        shipping_fee,
+        discount_amount,
+        total_amount,
+        customer_name,
+        customer_phone,
+        city,
+        area,
+        street_address,
+        notes,
+        created_at,
+        updated_at
+      `,
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(limit)
+    .overrideTypes<OrderRow[]>();
 
   if (error) {
-    console.error("[getOrders]", error.message);
-    return [];
+    throw new Error(`[getOrders] ${error.message}`);
   }
 
-  return (data as OrderRow[]) ?? [];
+  return (data ?? []).map(mapOrderRow);
 }
 
 export async function getOrderById(
@@ -33,48 +111,89 @@ export async function getOrderById(
 
   const { data, error } = await supabase
     .from("orders")
-    .select(`
-      *,
-      order_items(
-        id, order_id, product_id, product_code,
-        product_name_en, product_name_ar, product_image_url,
-        unit_price, quantity, line_total, created_at
-      )
-    `)
+    .select(
+      `
+        id,
+        user_id,
+        order_number,
+        status,
+        payment_status,
+        payment_method,
+        subtotal,
+        shipping_fee,
+        discount_amount,
+        total_amount,
+        customer_name,
+        customer_phone,
+        city,
+        area,
+        street_address,
+        notes,
+        created_at,
+        updated_at,
+        order_items(
+          id,
+          order_id,
+          product_id,
+          product_code,
+          product_name_en,
+          product_name_ar,
+          product_image_url,
+          unit_price,
+          quantity,
+          line_total,
+          created_at
+        )
+      `,
+    )
     .eq("id", orderId)
     .eq("user_id", userId)
-    .single();
+    .single()
+    .overrideTypes<OrderWithItemsRow>();
 
-  if (error || !data) {
-    console.error("[getOrderById]", error?.message);
-    return null;
+  if (error) {
+    // PGRST116 = no rows found → order doesn't belong to user or doesn't exist
+    if (error.code === "PGRST116") return null;
+    throw new Error(`[getOrderById] ${error.message}`);
   }
 
-  return data as unknown as OrderWithItems;
+  if (!data) return null;
+
+  return {
+    ...mapOrderRow(data),
+    order_items: data.order_items ?? [],
+  } as OrderWithItems;
 }
 
 export async function getRecentOrders(
   userId: string,
   limit = 5,
-): Promise<Array<OrderRow & { order_items: { product_name_en: string; quantity: number }[] }>> {
+): Promise<RecentOrderRow[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("orders")
-    .select(`
-      id, order_number, status, total_amount, created_at,
-      order_items(product_name_en, quantity)
-    `)
+    .select(
+      `
+        id,
+        order_number,
+        status,
+        total_amount,
+        created_at,
+        order_items(
+          product_name_en,
+          quantity
+        )
+      `,
+    )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(limit)
+    .overrideTypes<RecentOrderRow[]>();
 
   if (error) {
-    console.error("[getRecentOrders]", error.message);
-    return [];
+    throw new Error(`[getRecentOrders] ${error.message}`);
   }
 
-  return data as unknown as Array<
-    OrderRow & { order_items: { product_name_en: string; quantity: number }[] }
-  >;
+  return data ?? [];
 }

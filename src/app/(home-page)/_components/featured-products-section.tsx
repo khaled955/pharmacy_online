@@ -1,12 +1,22 @@
+import { Suspense } from "react";
 import { SectionHeader } from "@/components/shared/section-header";
 import { ProductCard } from "@/components/shared/product-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import ErrorBoundary from "@/components/shared/error-boundary";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { CarouselSectionSkeleton } from "@/components/ui/skeleton";
 import { getBestSellers } from "@/lib/services/products/get-best-sellers.service";
 import { getTrendingProducts } from "@/lib/services/products/get-trending-products.service";
 import { toProductCardProps } from "@/lib/utils/product-mapper";
 
 async function BestSellersSection() {
-  const products = await getBestSellers(5);
+  const products = await getBestSellers(8);
 
   return (
     <section className="section-container py-8">
@@ -19,18 +29,27 @@ async function BestSellersSection() {
       {products.length === 0 ? (
         <EmptyState title="No products yet" description="Check back soon." />
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {products.map((product) => (
-            <ProductCard key={product.id} {...toProductCardProps(product)} />
-          ))}
-        </div>
+        <Carousel opts={{ align: "start", loop: false }} className="w-full">
+          <CarouselContent className="-ml-3">
+            {products.map((product) => (
+              <CarouselItem
+                key={product.id}
+                className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
+              >
+                <ProductCard {...toProductCardProps(product)} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="-left-4 hidden sm:flex" />
+          <CarouselNext className="-right-4 hidden sm:flex" />
+        </Carousel>
       )}
     </section>
   );
 }
 
 async function TrendingSection() {
-  const products = await getTrendingProducts(4);
+  const products = await getTrendingProducts(8);
 
   return (
     <section className="section-container py-8">
@@ -43,21 +62,39 @@ async function TrendingSection() {
       {products.length === 0 ? (
         <EmptyState title="No trending products" description="Check back soon." />
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} {...toProductCardProps(product)} />
-          ))}
-        </div>
+        <Carousel opts={{ align: "start", loop: false }} className="w-full">
+          <CarouselContent className="-ml-3">
+            {products.map((product) => (
+              <CarouselItem
+                key={product.id}
+                className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4"
+              >
+                <ProductCard {...toProductCardProps(product)} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="-left-4 hidden sm:flex" />
+          <CarouselNext className="-right-4 hidden sm:flex" />
+        </Carousel>
       )}
     </section>
   );
 }
 
-export default async function FeaturedProductsSection() {
+export default function FeaturedProductsSection() {
   return (
     <>
-      <BestSellersSection />
-      <TrendingSection />
+      <ErrorBoundary>
+        <Suspense fallback={<CarouselSectionSkeleton count={5} />}>
+          <BestSellersSection />
+        </Suspense>
+      </ErrorBoundary>
+
+      <ErrorBoundary>
+        <Suspense fallback={<CarouselSectionSkeleton count={4} />}>
+          <TrendingSection />
+        </Suspense>
+      </ErrorBoundary>
     </>
   );
 }

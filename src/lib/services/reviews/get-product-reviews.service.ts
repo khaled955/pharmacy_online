@@ -10,22 +10,13 @@ export async function getProductReviews(
 
   const { data, error } = await supabase
     .from("reviews")
-    .select(`
-      id,
-      user_id,
-      product_id,
-      rating,
-      comment,
-      created_at,
-      profiles(first_name, last_name, full_name, avatar_url)
-    `)
+    .select("id, user_id, product_id, rating, comment, created_at")
     .eq("product_id", productId)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
-    console.error("[getProductReviews]", error.message);
-    return [];
+    throw new Error(`[getProductReviews] ${error.message}`);
   }
 
   return (data as unknown as ReviewRow[]) ?? [];

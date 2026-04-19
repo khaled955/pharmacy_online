@@ -45,10 +45,10 @@ function StarRow({ rating }: { rating: number }) {
 function ReviewCard({ review }: { review: ReviewRow }) {
   const authorName =
     review.profiles?.full_name ??
-    [review.profiles?.first_name, review.profiles?.last_name]
+    ([review.profiles?.first_name, review.profiles?.last_name]
       .filter(Boolean)
       .join(" ") ||
-    "Customer";
+      "Customer");
 
   const date = new Date(review.created_at).toLocaleDateString("en-US", {
     year: "numeric",
@@ -89,7 +89,10 @@ export function ProductTabs({
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "description", label: "Description" },
-    { id: "reviews", label: `Reviews (${(reviewCount ?? 0).toLocaleString()})` },
+    {
+      id: "reviews",
+      label: `Reviews (${(reviewCount ?? 0).toLocaleString()})`,
+    },
     { id: "specs", label: "Specifications" },
   ];
 

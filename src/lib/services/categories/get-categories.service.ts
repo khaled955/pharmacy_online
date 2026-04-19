@@ -12,8 +12,7 @@ export async function getCategories(): Promise<CategoryRow[]> {
     .order("name_en", { ascending: true });
 
   if (error) {
-    console.error("[getCategories]", error.message);
-    return [];
+    throw new Error(`[getCategories] ${error.message}`);
   }
 
   return (data as CategoryRow[]) ?? [];

@@ -2,14 +2,23 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { ProductCardData, ProductFilters } from "@/lib/types/product";
 import type { PaginatedResponse } from "@/lib/types/api";
+import {
+  PRODUCT_CARD_SELECT,
+  mapProductCardRow,
+  throwOnDbError,
+} from "./_product-helpers";
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const DEFAULT_LIMIT = 12;
 
-const CARD_SELECT = [
-  "id", "slug", "name_en", "name_ar", "price", "original_price",
-  "stock", "image_url", "avg_rating", "reviews_count", "brand",
-  "is_on_promotion", "promotion_label_en", "is_best_seller",
-].join(", ");
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type ProductBrandRow = {
+  brand: string | null;
+};
+
+// ─── Queries ──────────────────────────────────────────────────────────────────
 
 export async function getProducts(
   filters: ProductFilters = {},
@@ -21,34 +30,49 @@ export async function getProducts(
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const emptyMeta = { currentPage: page, totalPages: 0, limit, totalItems: 0 };
+  const emptyMeta = {
+    currentPage: page,
+    totalPages: 0,
+    limit,
+    totalItems: 0,
+  };
 
   // Resolve category slug → id before building main query
   let categoryId: string | null = null;
+
   if (filters.category) {
-    const { data: cat } = await supabase
+    const { data: cat, error: categoryError } = await supabase
       .from("categories")
       .select("id")
       .eq("slug", filters.category)
       .eq("is_active", true)
-      .single();
+      .single()
+      .overrideTypes<{ id: string }>();
 
-    if (!cat) return { data: [], meta: emptyMeta };
-    categoryId = cat.id as string;
+    if (categoryError || !cat) {
+      return { data: [], meta: emptyMeta };
+    }
+
+    categoryId = cat.id;
   }
 
   let query = supabase
     .from("products")
-    .select(CARD_SELECT, { count: "exact" })
+    .select(PRODUCT_CARD_SELECT, { count: "exact" })
     .eq("is_active", true);
 
   if (categoryId) query = query.eq("category_id", categoryId);
   if (filters.brand) query = query.eq("brand", filters.brand);
-  if (filters.minPrice !== undefined) query = query.gte("price", filters.minPrice);
-  if (filters.maxPrice !== undefined) query = query.lte("price", filters.maxPrice);
+  if (filters.minPrice !== undefined)
+    query = query.gte("price", filters.minPrice);
+  if (filters.maxPrice !== undefined)
+    query = query.lte("price", filters.maxPrice);
   if (filters.onSale) query = query.eq("is_on_promotion", true);
-  if (filters.prescriptionType) query = query.eq("prescription_type", filters.prescriptionType);
-  if (filters.seasonalTag) query = query.eq("seasonal_tag", filters.seasonalTag);
+  if (filters.prescriptionType) {
+    query = query.eq("prescription_type", filters.prescriptionType);
+  }
+  if (filters.seasonalTag)
+    query = query.eq("seasonal_tag", filters.seasonalTag);
   if (filters.bestSeller) query = query.eq("is_best_seller", true);
   if (filters.trending) query = query.eq("is_trending", true);
 
@@ -67,7 +91,10 @@ export async function getProducts(
       query = query.order("price", { ascending: false });
       break;
     case "rating_desc":
-      query = query.order("avg_rating", { ascending: false, nullsFirst: false });
+      query = query.order("avg_rating", {
+        ascending: false,
+        nullsFirst: false,
+      });
       break;
     case "sold_desc":
       query = query.order("sold_count", { ascending: false });
@@ -80,19 +107,23 @@ export async function getProducts(
       break;
   }
 
-  const { data, count, error } = await query.range(from, to);
+  const { data, count, error } = await query
+    .range(from, to)
+    .overrideTypes<ProductCardData[]>();
 
-  if (error) {
-    console.error("[getProducts]", error.message);
-    return { data: [], meta: emptyMeta };
-  }
+  throwOnDbError(error, "getProducts");
 
   const totalItems = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / limit));
 
   return {
-    data: (data as ProductCardData[]) ?? [],
-    meta: { currentPage: page, totalPages, limit, totalItems },
+    data: (data ?? []).map(mapProductCardRow),
+    meta: {
+      currentPage: page,
+      totalPages,
+      limit,
+      totalItems,
+    },
   };
 }
 
@@ -103,15 +134,12 @@ export async function getProductBrands(): Promise<string[]> {
     .from("products")
     .select("brand")
     .eq("is_active", true)
-    .not("brand", "is", null);
+    .not("brand", "is", null)
+    .overrideTypes<ProductBrandRow[]>();
 
-  if (error) return [];
+  throwOnDbError(error, "getProductBrands");
 
-  const brands = [
-    ...new Set(
-      (data ?? []).map((p) => p.brand as string).filter(Boolean),
-    ),
-  ].sort();
-
-  return brands;
+  return [
+    ...new Set((data ?? []).map((item) => item.brand).filter(Boolean)),
+  ].sort() as string[];
 }

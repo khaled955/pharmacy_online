@@ -1,7 +1,7 @@
 import { Skeleton, ProductCardSkeleton, SectionHeaderSkeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/tailwind-merge";
 
-function HeroSkeleton() {
+export function HeroSkeleton() {
   return (
     <div className="bg-gradient-hero">
       <div className="section-container py-14 md:py-20">
@@ -28,7 +28,7 @@ function HeroSkeleton() {
   );
 }
 
-function CategoriesSkeleton() {
+export function CategoriesSkeleton() {
   return (
     <div className="section-container py-10">
       <SectionHeaderSkeleton />
@@ -41,7 +41,7 @@ function CategoriesSkeleton() {
   );
 }
 
-function ProductGridSkeleton({ count = 5 }: { count?: number }) {
+export function ProductGridSkeleton({ count = 5 }: { count?: number }) {
   return (
     <div className="section-container py-8">
       <SectionHeaderSkeleton />
