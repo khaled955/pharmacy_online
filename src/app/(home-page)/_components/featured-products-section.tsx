@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { SectionHeader } from "@/components/shared/section-header";
-import { ProductCard } from "@/components/shared/product-card";
+import { InteractiveProductCard } from "@/components/shop/interactive-product-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import ErrorBoundary from "@/components/shared/error-boundary";
 import {
@@ -36,7 +36,7 @@ async function BestSellersSection() {
                 key={product.id}
                 className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
               >
-                <ProductCard {...toProductCardProps(product)} />
+                <InteractiveProductCard {...toProductCardProps(product)} />
               </CarouselItem>
             ))}
           </CarouselContent>
@@ -69,7 +69,7 @@ async function TrendingSection() {
                 key={product.id}
                 className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4"
               >
-                <ProductCard {...toProductCardProps(product)} />
+                <InteractiveProductCard {...toProductCardProps(product)} />
               </CarouselItem>
             ))}
           </CarouselContent>

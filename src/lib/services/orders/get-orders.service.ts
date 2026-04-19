@@ -1,37 +1,16 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { OrderRow, OrderWithItems } from "@/lib/types/order";
+import type { OrderRow, OrderItemRow, OrderWithItems } from "@/lib/types/order";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type RecentOrderItemRow = {
-  product_name_en: string;
-  quantity: number;
-};
+type RecentOrderItemRow = Pick<OrderItemRow, "product_name_en" | "quantity">;
 
 type RecentOrderRow = Pick<
   OrderRow,
   "id" | "order_number" | "status" | "total_amount" | "created_at"
 > & {
   order_items: RecentOrderItemRow[];
-};
-
-type OrderItemRow = {
-  id: string;
-  order_id: string;
-  product_id: string;
-  product_code: string | null;
-  product_name_en: string;
-  product_name_ar: string;
-  product_image_url: string | null;
-  unit_price: number;
-  quantity: number;
-  line_total: number;
-  created_at: string;
-};
-
-type OrderWithItemsRow = OrderRow & {
-  order_items: OrderItemRow[];
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -149,7 +128,7 @@ export async function getOrderById(
     .eq("id", orderId)
     .eq("user_id", userId)
     .single()
-    .overrideTypes<OrderWithItemsRow>();
+    .overrideTypes<OrderWithItems>();
 
   if (error) {
     // PGRST116 = no rows found → order doesn't belong to user or doesn't exist

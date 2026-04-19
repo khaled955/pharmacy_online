@@ -1,5 +1,55 @@
 import type { ProductCardData } from "./product";
 
+// ─── Payloads ────────────────────────────────────────────────────────────────
+
+export type AddToCartPayload = {
+  productId: string;
+  quantity: number;
+};
+
+export type UpdateCartItemPayload = {
+  cartItemId: string;
+  quantity: number;
+};
+
+export type RemoveFromCartPayload = {
+  cartItemId: string;
+};
+
+export type ToggleWishlistPayload = {
+  productId: string;
+};
+
+export type AddressInput = {
+  label?: string;
+  recipient_name: string;
+  phone: string;
+  city: string;
+  area: string;
+  street_address: string;
+  building?: string;
+  floor?: string;
+  apartment?: string;
+  notes?: string;
+  is_default?: boolean;
+  lat?: number;
+  lng?: number;
+};
+
+export type CreateOrderPayload = {
+  addressId?: string;
+  addressInput?: AddressInput;
+  paymentMethod: string;
+  notes?: string;
+};
+
+export type CreateOrderResult = {
+  order: OrderRow;
+  adminWhatsAppUrl: string;
+};
+
+// ─── Status enums ─────────────────────────────────────────────────────────────
+
 export type OrderStatus =
   | "pending"
   | "confirmed"
@@ -56,7 +106,6 @@ export type CartItemRow = {
   product_id: string;
   quantity: number;
   created_at: string;
-  updated_at: string;
   products?: ProductCardData | null;
 };
 

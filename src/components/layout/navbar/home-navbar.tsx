@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Search, ShoppingCart, Heart } from "lucide-react";
+import { ShieldCheck, Search } from "lucide-react";
 import { fetchUserProfileService } from "@/lib/services/user/fetch-user-profile.service";
 import { AUTH_ROUTES } from "@/lib/constants/auth";
 import LogoutButton from "./logout-button";
@@ -7,6 +7,8 @@ import ThemeToggle from "./theme-toggle";
 import Greeting from "./greeting";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils/tailwind-merge";
+import { CartBadge } from "@/components/shop/cart-badge";
+import { WishlistBadge } from "@/components/shop/wishlist-badge";
 
 const navLinks = [
   { label: "Home",        href: "/" },
@@ -88,42 +90,11 @@ export default async function HomeNavbar() {
               <Search className="h-4 w-4" />
             </button>
 
-            {/* Wishlist */}
-            <Link
-              href="/wishlist"
-              aria-label="Wishlist"
-              className={cn(
-                "hidden sm:flex h-9 w-9 items-center justify-center rounded-xl",
-                "border border-border bg-card text-muted-foreground",
-                "shadow-sm transition-all duration-200",
-                "hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
-              )}
-            >
-              <Heart className="h-4 w-4" />
-            </Link>
+            {/* Wishlist — dynamic count badge */}
+            <WishlistBadge />
 
-            {/* Cart */}
-            <Link
-              href="/cart"
-              aria-label="Cart"
-              className={cn(
-                "relative flex h-9 w-9 items-center justify-center rounded-xl",
-                "border border-border bg-card text-muted-foreground",
-                "shadow-sm transition-all duration-200",
-                "hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
-              )}
-            >
-              <ShoppingCart className="h-4 w-4" />
-              {/* Cart count badge — static demo */}
-              <span
-                className={cn(
-                  "absolute -end-1 -top-1 flex h-4 w-4 items-center justify-center",
-                  "rounded-full bg-primary text-[10px] font-bold text-primary-foreground",
-                )}
-              >
-                3
-              </span>
-            </Link>
+            {/* Cart — dynamic count badge */}
+            <CartBadge />
 
             {/* Theme toggle */}
             <ThemeToggle />

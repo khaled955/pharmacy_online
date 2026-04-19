@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
-import { ProductCard } from "@/components/shared/product-card";
+import { InteractiveProductCard } from "@/components/shop/interactive-product-card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FilterSidebar, type ActiveFilters } from "./_components/filter-sidebar";
@@ -130,7 +130,7 @@ export default async function ProductsPage({
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
-                <ProductCard key={product.id} {...toProductCardProps(product)} />
+                <InteractiveProductCard key={product.id} {...toProductCardProps(product)} />
               ))}
             </div>
           )}

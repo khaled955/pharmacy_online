@@ -120,10 +120,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     disabled,
     serverError,
     type = "button",
+    asChild,
     ...props
   },
   ref,
 ) {
+  if (asChild && React.isValidElement(children)) {
+    const child = children as React.ReactElement<{ className?: string }>;
+    return React.cloneElement(child, {
+      ...props,
+      className: cn("group", buttonVariants({ variant, size }), className, child.props.className),
+    });
+  }
+
   const renderIcon = () => {
     if (isLoading) {
       return <LoaderCircle className="size-4 animate-spin opacity-80" />;

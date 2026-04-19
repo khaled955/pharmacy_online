@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { ChevronRight, ShoppingCart, Share2, Check, Package, Truck, ShieldCheck, RotateCcw } from "lucide-react";
+import { ChevronRight, Share2, Check, Package, Truck, ShieldCheck, RotateCcw } from "lucide-react";
+import { ProductActions } from "./_components/product-actions";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -199,35 +200,8 @@ export default async function ProductDetailsPage(
 
           <Separator />
 
-          {/* Quantity + CTA */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center overflow-hidden rounded-xl border border-border bg-card">
-              <button
-                type="button"
-                className="flex h-11 w-10 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                −
-              </button>
-              <span className="w-10 text-center text-sm font-semibold text-foreground">
-                1
-              </span>
-              <button
-                type="button"
-                className="flex h-11 w-10 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                +
-              </button>
-            </div>
-
-            <Button
-              className="flex-1 bg-gradient-brand hover:opacity-90"
-              size="lg"
-              disabled={product.stock === 0}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
-            </Button>
-          </div>
+          {/* Quantity + CTA (client component — handles cart & wishlist) */}
+          <ProductActions productId={product.id} stock={product.stock} />
 
           <GuaranteeBar />
         </div>
