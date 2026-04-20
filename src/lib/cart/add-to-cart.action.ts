@@ -1,5 +1,6 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getAuthUserId } from "@/lib/auth/get-auth-user-id";
 import type { AuthResponse } from "@/lib/types/auth";
 import type { AddToCartPayload, CartItemRow } from "@/lib/types/order";
 import { SHOP_TABLES } from "@/lib/constants/shop";
@@ -7,29 +8,23 @@ import { SHOP_TABLES } from "@/lib/constants/shop";
 export async function addToCartAction(
   payload: AddToCartPayload,
 ): Promise<AuthResponse<CartItemRow>> {
-  const supabase = await createClient();
+  const userId = await getAuthUserId();
+  if (!userId) {
+    return { status: false, message: "Please log in to add items to cart", data: null };
+  }
 
   try {
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return { status: false, message: "Please log in to add items to cart", data: null };
-    }
-
     const { productId, quantity } = payload;
 
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
       .from(SHOP_TABLES.CART)
       .select("id, quantity")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("product_id", productId)
       .single();
 
     if (existing) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from(SHOP_TABLES.CART)
         .update({ quantity: (existing as { quantity: number }).quantity + quantity, updated_at: new Date().toISOString() })
         .eq("id", (existing as { id: string }).id)
@@ -40,9 +35,9 @@ export async function addToCartAction(
       return { status: true, message: "Cart updated", data: data as unknown as CartItemRow };
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from(SHOP_TABLES.CART)
-      .insert({ user_id: user.id, product_id: productId, quantity })
+      .insert({ user_id: userId, product_id: productId, quantity })
       .select()
       .single();
 

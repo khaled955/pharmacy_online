@@ -1,5 +1,6 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getAuthUserId } from "@/lib/auth/get-auth-user-id";
 import type { AuthResponse } from "@/lib/types/auth";
 import type {
   CreateOrderPayload,
@@ -35,20 +36,14 @@ function generateOrderNumber(): string {
 export async function createOrderAction(
   payload: CreateOrderPayload,
 ): Promise<AuthResponse<CreateOrderResult>> {
-  const supabase = await createClient();
+  const userId = await getAuthUserId();
+  if (!userId) {
+    return { status: false, message: "Please log in to place an order", data: null };
+  }
 
   try {
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return { status: false, message: "Please log in to place an order", data: null };
-    }
-
     // 1 — Fetch cart with joined product prices (server-validated)
-    const { data: cartItems, error: cartError } = await supabase
+    const { data: cartItems, error: cartError } = await supabaseAdmin
       .from(SHOP_TABLES.CART)
       .select(
         `
@@ -67,7 +62,7 @@ export async function createOrderAction(
         )
       `,
       )
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .overrideTypes<CartItemWithProduct[]>();
 
     if (cartError) throw new Error(cartError.message);
@@ -104,11 +99,11 @@ export async function createOrderAction(
     };
 
     if (payload.addressId) {
-      const { data: addr } = await supabase
+      const { data: addr } = await supabaseAdmin
         .from(SHOP_TABLES.ADDRESSES)
         .select("*")
         .eq("id", payload.addressId)
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
       if (addr) {
@@ -124,9 +119,8 @@ export async function createOrderAction(
     } else if (payload.addressInput) {
       const a = payload.addressInput;
 
-      // Persist the new address
-      await supabase.from(SHOP_TABLES.ADDRESSES).insert({
-        user_id: user.id,
+      await supabaseAdmin.from(SHOP_TABLES.ADDRESSES).insert({
+        user_id: userId,
         recipient_name: a.recipient_name,
         phone: a.phone,
         city: a.city,
@@ -152,10 +146,10 @@ export async function createOrderAction(
     // 4 — Insert order row
     const orderNumber = generateOrderNumber();
 
-    const { data: orderData, error: orderError } = await supabase
+    const { data: orderData, error: orderError } = await supabaseAdmin
       .from(SHOP_TABLES.ORDERS)
       .insert({
-        user_id: user.id,
+        user_id: userId,
         order_number: orderNumber,
         status: "pending",
         payment_status: "pending",
@@ -186,7 +180,7 @@ export async function createOrderAction(
       line_total: (item.products?.price ?? 0) * item.quantity,
     }));
 
-    const { error: itemsError } = await supabase
+    const { error: itemsError } = await supabaseAdmin
       .from(SHOP_TABLES.ORDER_ITEMS)
       .insert(orderItems);
 
@@ -194,7 +188,7 @@ export async function createOrderAction(
 
     // 6 — Clear cart
     const cartIds = cartItems.map((i) => i.id);
-    await supabase.from(SHOP_TABLES.CART).delete().in("id", cartIds);
+    await supabaseAdmin.from(SHOP_TABLES.CART).delete().in("id", cartIds);
 
     // 7 — Build admin WhatsApp URL
     const adminPhone = process.env.ADMIN_WHATSAPP_PHONE ?? "";

@@ -1,8 +1,7 @@
 "use client";
-import { loginAction } from "@/lib/auth/login.action";
 import { LoginFields } from "@/lib/schemas/auth/login.schema";
-import { AuthResponse, LoginResponseData } from "@/lib/types/auth";
 import { useMutation } from "@tanstack/react-query";
+import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
@@ -21,21 +20,22 @@ export function useLogin() {
     mutate: onLogin,
     error: loginError,
     isPending: loginIsPending,
-  } = useMutation<AuthResponse<LoginResponseData>, Error, LoginFields>({
+  } = useMutation<void, Error, LoginFields>({
     mutationFn: async (loginFormValues) => {
-      const response = await loginAction(loginFormValues);
+      const result = await signIn("credentials", {
+        email: loginFormValues.email,
+        password: loginFormValues.password,
+        redirect: false,
+      });
 
-      if (!response.status) {
-        throw new Error(response.message || "Login failed");
+      if (result?.error) {
+        throw new Error("Invalid email or password");
       }
-
-      return response;
     },
     onSuccess: () => {
       toast.success("Login successful! Redirecting...", {
         duration: 2000,
         onAutoClose: () => {
-          // redirect to callbackUrl or homepage
           window.location.href = callbackUrl;
         },
       });

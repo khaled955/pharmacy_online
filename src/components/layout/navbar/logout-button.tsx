@@ -1,12 +1,12 @@
 "use client";
 
-import { logoutAction } from "@/lib/auth/logout.action";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 export default function LogoutButton() {
   async function handleLogout() {
-    await logoutAction();
+    await signOut({ callbackUrl: "/" });
   }
 
   return (

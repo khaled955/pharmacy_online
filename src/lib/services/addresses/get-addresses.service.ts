@@ -1,12 +1,10 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { AddressRow } from "@/lib/types/order";
 import { SHOP_TABLES } from "@/lib/constants/shop";
 
 export async function getAddresses(userId: string): Promise<AddressRow[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(SHOP_TABLES.ADDRESSES)
     .select("*")
     .eq("user_id", userId)
@@ -22,9 +20,7 @@ export async function getAddressById(
   addressId: string,
   userId: string,
 ): Promise<AddressRow | null> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(SHOP_TABLES.ADDRESSES)
     .select("*")
     .eq("id", addressId)

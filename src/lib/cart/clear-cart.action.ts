@@ -1,27 +1,22 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getAuthUserId } from "@/lib/auth/get-auth-user-id";
 import type { AuthResponse } from "@/lib/types/auth";
 import { SHOP_TABLES } from "@/lib/constants/shop";
 
 export async function clearCartAction(
   itemIds?: string[],
 ): Promise<AuthResponse<null>> {
-  const supabase = await createClient();
+  const userId = await getAuthUserId();
+  if (!userId) {
+    return { status: false, message: "Unauthorized", data: null };
+  }
 
   try {
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return { status: false, message: "Unauthorized", data: null };
-    }
-
-    let query = supabase
+    let query = supabaseAdmin
       .from(SHOP_TABLES.CART)
       .delete()
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
     if (itemIds && itemIds.length > 0) {
       query = query.in("id", itemIds);

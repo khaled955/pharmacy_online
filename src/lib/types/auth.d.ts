@@ -10,6 +10,7 @@ export type AuthUser = {
   phone: string | null;
   avatar_url: string | null;
   role: UserRole;
+  accessToken: string;
 };
 
 export type SuccessResponse<T = null> = {
@@ -25,11 +26,6 @@ export type ErrorResponse = {
 };
 
 export type AuthResponse<T = null> = SuccessResponse<T> | ErrorResponse;
-
-export type LoginResponseData = {
-  user: AuthUser;
-  access_token?: string;
-};
 
 export type RegisterResponseData = {
   email: string;
@@ -53,5 +49,3 @@ export type AuthFeature = {
   title: string;
   desc: string;
 };
-
-

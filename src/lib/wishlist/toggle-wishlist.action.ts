@@ -1,5 +1,6 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getAuthUserId } from "@/lib/auth/get-auth-user-id";
 import type { AuthResponse } from "@/lib/types/auth";
 import type { ToggleWishlistPayload, WishlistItemRow } from "@/lib/types/order";
 import { SHOP_TABLES } from "@/lib/constants/shop";
@@ -12,41 +13,35 @@ export type ToggleWishlistResult = {
 export async function toggleWishlistAction(
   payload: ToggleWishlistPayload,
 ): Promise<AuthResponse<ToggleWishlistResult>> {
-  const supabase = await createClient();
+  const userId = await getAuthUserId();
+  if (!userId) {
+    return { status: false, message: "Please log in to manage your wishlist", data: null };
+  }
 
   try {
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return { status: false, message: "Please log in to manage your wishlist", data: null };
-    }
-
     const { productId } = payload;
 
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
       .from(SHOP_TABLES.WISHLIST)
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("product_id", productId)
       .single();
 
     if (existing) {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from(SHOP_TABLES.WISHLIST)
         .delete()
         .eq("id", (existing as { id: string }).id)
-        .eq("user_id", user.id);
+        .eq("user_id", userId);
 
       if (error) throw new Error(error.message);
       return { status: true, message: "Removed from wishlist", data: { action: "removed", item: null } };
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from(SHOP_TABLES.WISHLIST)
-      .insert({ user_id: user.id, product_id: productId })
+      .insert({ user_id: userId, product_id: productId })
       .select()
       .single();
 

@@ -1,5 +1,6 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getAuthUserId } from "@/lib/auth/get-auth-user-id";
 import type { AuthResponse } from "@/lib/types/auth";
 import type { RemoveFromCartPayload } from "@/lib/types/order";
 import { SHOP_TABLES } from "@/lib/constants/shop";
@@ -7,23 +8,17 @@ import { SHOP_TABLES } from "@/lib/constants/shop";
 export async function removeFromCartAction(
   payload: RemoveFromCartPayload,
 ): Promise<AuthResponse<null>> {
-  const supabase = await createClient();
+  const userId = await getAuthUserId();
+  if (!userId) {
+    return { status: false, message: "Unauthorized", data: null };
+  }
 
   try {
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return { status: false, message: "Unauthorized", data: null };
-    }
-
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from(SHOP_TABLES.CART)
       .delete()
       .eq("id", payload.cartItemId)
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
     if (error) throw new Error(error.message);
     return { status: true, message: "Item removed from cart", data: null };

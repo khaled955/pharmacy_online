@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { CartItemRow } from "@/lib/types/order";
 import type { ProductCardData } from "@/lib/types/product";
 import { SHOP_TABLES } from "@/lib/constants/shop";
@@ -8,9 +8,7 @@ const PRODUCT_COLUMNS =
   "id, slug, name_en, name_ar, price, original_price, stock, image_url, avg_rating, reviews_count, brand, is_on_promotion, promotion_label_en, is_best_seller";
 
 export async function getCart(userId: string): Promise<CartItemRow[]> {
-  const supabase = await createClient();
-
-  const { data: items, error } = await supabase
+  const { data: items, error } = await supabaseAdmin
     .from(SHOP_TABLES.CART)
     .select("id, user_id, product_id, quantity, created_at, updated_at")
     .eq("user_id", userId)
@@ -21,7 +19,7 @@ export async function getCart(userId: string): Promise<CartItemRow[]> {
 
   const productIds = items.map((i) => i.product_id as string);
 
-  const { data: products, error: productsError } = await supabase
+  const { data: products, error: productsError } = await supabaseAdmin
     .from("products")
     .select(PRODUCT_COLUMNS)
     .in("id", productIds);
@@ -39,9 +37,7 @@ export async function getCart(userId: string): Promise<CartItemRow[]> {
 }
 
 export async function getCartCount(userId: string): Promise<number> {
-  const supabase = await createClient();
-
-  const { count, error } = await supabase
+  const { count, error } = await supabaseAdmin
     .from(SHOP_TABLES.CART)
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId);

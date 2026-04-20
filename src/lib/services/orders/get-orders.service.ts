@@ -1,8 +1,6 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { OrderRow, OrderItemRow, OrderWithItems } from "@/lib/types/order";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type RecentOrderItemRow = Pick<OrderItemRow, "product_name_en" | "quantity">;
 
@@ -12,8 +10,6 @@ type RecentOrderRow = Pick<
 > & {
   order_items: RecentOrderItemRow[];
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function mapOrderRow(row: OrderRow): OrderRow {
   return {
@@ -38,47 +34,21 @@ function mapOrderRow(row: OrderRow): OrderRow {
   };
 }
 
-// ─── Queries ──────────────────────────────────────────────────────────────────
-
-export async function getOrders(
-  userId: string,
-  limit = 20,
-): Promise<OrderRow[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+export async function getOrders(userId: string, limit = 20): Promise<OrderRow[]> {
+  const { data, error } = await supabaseAdmin
     .from("orders")
     .select(
-      `
-        id,
-        user_id,
-        order_number,
-        status,
-        payment_status,
-        payment_method,
-        subtotal,
-        shipping_fee,
-        discount_amount,
-        total_amount,
-        customer_name,
-        customer_phone,
-        city,
-        area,
-        street_address,
-        notes,
-        created_at,
-        updated_at
-      `,
+      `id, user_id, order_number, status, payment_status, payment_method,
+       subtotal, shipping_fee, discount_amount, total_amount,
+       customer_name, customer_phone, city, area, street_address,
+       notes, created_at, updated_at`,
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit)
     .overrideTypes<OrderRow[]>();
 
-  if (error) {
-    throw new Error(`[getOrders] ${error.message}`);
-  }
-
+  if (error) throw new Error(`[getOrders] ${error.message}`);
   return (data ?? []).map(mapOrderRow);
 }
 
@@ -86,44 +56,18 @@ export async function getOrderById(
   orderId: string,
   userId: string,
 ): Promise<OrderWithItems | null> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("orders")
     .select(
-      `
-        id,
-        user_id,
-        order_number,
-        status,
-        payment_status,
-        payment_method,
-        subtotal,
-        shipping_fee,
-        discount_amount,
-        total_amount,
-        customer_name,
-        customer_phone,
-        city,
-        area,
-        street_address,
-        notes,
-        created_at,
-        updated_at,
-        order_items(
-          id,
-          order_id,
-          product_id,
-          product_code,
-          product_name_en,
-          product_name_ar,
-          product_image_url,
-          unit_price,
-          quantity,
-          line_total,
-          created_at
-        )
-      `,
+      `id, user_id, order_number, status, payment_status, payment_method,
+       subtotal, shipping_fee, discount_amount, total_amount,
+       customer_name, customer_phone, city, area, street_address,
+       notes, created_at, updated_at,
+       order_items(
+         id, order_id, product_id, product_code,
+         product_name_en, product_name_ar, product_image_url,
+         unit_price, quantity, line_total, created_at
+       )`,
     )
     .eq("id", orderId)
     .eq("user_id", userId)
@@ -131,7 +75,6 @@ export async function getOrderById(
     .overrideTypes<OrderWithItems>();
 
   if (error) {
-    // PGRST116 = no rows found → order doesn't belong to user or doesn't exist
     if (error.code === "PGRST116") return null;
     throw new Error(`[getOrderById] ${error.message}`);
   }
@@ -148,31 +91,17 @@ export async function getRecentOrders(
   userId: string,
   limit = 5,
 ): Promise<RecentOrderRow[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("orders")
     .select(
-      `
-        id,
-        order_number,
-        status,
-        total_amount,
-        created_at,
-        order_items(
-          product_name_en,
-          quantity
-        )
-      `,
+      `id, order_number, status, total_amount, created_at,
+       order_items(product_name_en, quantity)`,
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit)
     .overrideTypes<RecentOrderRow[]>();
 
-  if (error) {
-    throw new Error(`[getRecentOrders] ${error.message}`);
-  }
-
+  if (error) throw new Error(`[getRecentOrders] ${error.message}`);
   return data ?? [];
 }
