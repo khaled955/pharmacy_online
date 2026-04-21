@@ -1,41 +1,41 @@
 "use client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { updateCartItemAction } from "@/lib/cart/update-cart-item.action";
+import { clearCartAction } from "@/lib/cart/clear-cart.action";
 import { QUERY_KEYS, SHOP_MUTATION_KEYS } from "@/lib/constants/shop";
-import type { UpdateCartItemPayload, CartItemRow } from "@/lib/types/order";
+import type { CartItemRow } from "@/lib/types/order";
 import type { AuthResponse } from "@/lib/types/auth";
 
-export function useUpdateCartItem() {
+export function useClearCart() {
   const queryClient = useQueryClient();
 
-  const { mutate: updateCartItem, isPending: updateCartItemPending } = useMutation<
-    AuthResponse<CartItemRow>,
+  const { mutate: clearCart, isPending: clearCartPending } = useMutation<
+    AuthResponse<null>,
     Error,
-    UpdateCartItemPayload,
+    void,
     { previousCart: CartItemRow[] | undefined }
   >({
-    mutationKey: SHOP_MUTATION_KEYS.UPDATE_CART_ITEM,
-    mutationFn: async (payload) => {
-      const response = await updateCartItemAction(payload);
+    mutationKey: SHOP_MUTATION_KEYS.CLEAR_CART,
+    mutationFn: async () => {
+      const response = await clearCartAction();
       if (!response.status) throw new Error(response.message);
       return response;
     },
-    onMutate: async ({ cartItemId, quantity }) => {
+    onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: QUERY_KEYS.CART });
       const previousCart = queryClient.getQueryData<CartItemRow[]>(QUERY_KEYS.CART);
-      queryClient.setQueryData<CartItemRow[]>(QUERY_KEYS.CART, (old = []) =>
-        old.map((item) =>
-          item.id === cartItemId ? { ...item, quantity } : item,
-        ),
-      );
+      queryClient.setQueryData(QUERY_KEYS.CART, []);
+      queryClient.setQueryData(QUERY_KEYS.CART_COUNT, 0);
       return { previousCart };
     },
     onError: (error, _, context) => {
       if (context?.previousCart !== undefined) {
         queryClient.setQueryData(QUERY_KEYS.CART, context.previousCart);
       }
-      toast.error(error.message || "Failed to update cart");
+      toast.error(error.message || "Failed to clear cart");
+    },
+    onSuccess: () => {
+      toast.success("Cart cleared");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CART });
@@ -43,5 +43,5 @@ export function useUpdateCartItem() {
     },
   });
 
-  return { updateCartItem, updateCartItemPending };
+  return { clearCart, clearCartPending };
 }

@@ -12,7 +12,7 @@ export function WishlistBadge({ className }: { className?: string }) {
       href="/wishlist"
       aria-label={`Wishlist (${count} items)`}
       className={cn(
-        "relative hidden sm:flex h-9 w-9 items-center justify-center rounded-xl",
+        "relative flex h-9 w-9 items-center justify-center rounded-xl",
         "border border-border bg-card text-muted-foreground",
         "shadow-sm transition-all duration-200",
         "hover:border-primary/30 hover:bg-primary/5 hover:text-primary",

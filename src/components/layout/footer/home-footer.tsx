@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShieldCheck, Phone, Mail, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { Separator } from "@/components/ui/separator";
+import { NavLink } from "@/components/shared/nav-link";
 
 /* ─── Social icon SVGs (brand icons not in lucide) ─────── */
 function FacebookIcon({ className }: { className?: string }) {
@@ -36,32 +37,32 @@ function YoutubeIcon({ className }: { className?: string }) {
   );
 }
 
-/* ─── Static data — ready for dynamic props later ─────── */
+/* ─── Static data ─────────────────────────────────────── */
 const footerCategories = [
-  { label: "Medicines",     href: "/products?category=medicines" },
-  { label: "Vitamins",      href: "/products?category=vitamins" },
-  { label: "Skin Care",     href: "/products?category=skin-care" },
-  { label: "Baby Care",     href: "/products?category=baby-care" },
-  { label: "Mother Care",   href: "/products?category=mother-care" },
-  { label: "Supplements",   href: "/products?category=supplements" },
+  { label: "Medicines",   href: "/products?category=medicines" },
+  { label: "Vitamins",    href: "/products?category=vitamins" },
+  { label: "Skin Care",   href: "/products?category=skin-care" },
+  { label: "Baby Care",   href: "/products?category=baby-care" },
+  { label: "Mother Care", href: "/products?category=mother-care" },
+  { label: "Supplements", href: "/products?category=supplements" },
 ];
 
 const footerLinks = [
-  { label: "Home",             href: "/" },
-  { label: "Best Sellers",     href: "/products?sort=best-sellers" },
-  { label: "Offers",           href: "/products?offers=true" },
-  { label: "About Us",         href: "/about" },
-  { label: "Contact Us",       href: "/contact" },
-  { label: "Support",          href: "/support" },
+  { label: "Home",         href: "/" },
+  { label: "Best Sellers", href: "/products?sort=best-sellers" },
+  { label: "Offers",       href: "/products?offers=true" },
+  { label: "About Us",     href: "/about" },
+  { label: "Contact Us",   href: "/contact" },
+  { label: "Support",      href: "/support" },
 ];
 
 const customerLinks = [
-  { label: "My Orders",        href: "/orders" },
-  { label: "My Profile",       href: "/profile" },
-  { label: "Wishlist",         href: "/wishlist" },
-  { label: "Track Order",      href: "/orders/track" },
-  { label: "Returns & Refunds",href: "/support/returns" },
-  { label: "FAQs",             href: "/support/faq" },
+  { label: "My Orders",          href: "/allOrders" },
+  { label: "My Profile",         href: "/profile" },
+  { label: "Wishlist",           href: "/wishlist" },
+  { label: "Track Order",        href: "/orders/track" },
+  { label: "Returns & Refunds",  href: "/support/returns" },
+  { label: "FAQs",               href: "/support/faq" },
 ];
 
 const socialLinks = [
@@ -71,7 +72,7 @@ const socialLinks = [
   { icon: YoutubeIcon,   href: "#", label: "YouTube" },
 ];
 
-/* ─── Sub-components ────────────────────────────────────── */
+/* ─── Sub-components ───────────────────────────────────── */
 function FooterHeading({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
@@ -80,23 +81,26 @@ function FooterHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
+const footerLinkClass = cn(
+  "text-sm text-muted-foreground",
+  "transition-colors duration-150 hover:text-primary",
+);
+
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <li>
-      <Link
+      <NavLink
         href={href}
-        className={cn(
-          "text-sm text-muted-foreground",
-          "transition-colors duration-150 hover:text-primary",
-        )}
+        className={footerLinkClass}
+        activeClassName="text-primary font-medium"
       >
         {children}
-      </Link>
+      </NavLink>
     </li>
   );
 }
 
-/* ─── Main Footer ───────────────────────────────────────── */
+/* ─── Main Footer ──────────────────────────────────────── */
 export default function HomeFooter() {
   return (
     <footer className="border-t border-border bg-card">
@@ -213,18 +217,20 @@ export default function HomeFooter() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <Link
+            <NavLink
               href="/privacy"
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              activeClassName="text-primary"
             >
               Privacy Policy
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               href="/terms"
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              activeClassName="text-primary"
             >
               Terms of Service
-            </Link>
+            </NavLink>
           </div>
         </div>
       </div>

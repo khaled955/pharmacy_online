@@ -1,15 +1,17 @@
 "use client";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartItemCard } from "@/components/shop/cart-item-card";
 import { OrderSummary } from "@/components/shop/order-summary";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useCart } from "@/hooks/cart/use-cart";
+import { useClearCart } from "@/hooks/cart/use-clear-cart";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function CartList() {
   const { data: items = [], isLoading, isError } = useCart();
+  const { clearCart, clearCartPending } = useClearCart();
 
   if (isLoading) {
     return (
@@ -53,6 +55,23 @@ export function CartList() {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
       {/* Items */}
       <div className="space-y-3">
+        {/* Items header with clear button */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {items.length} item{items.length === 1 ? "" : "s"}
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 rounded-lg px-2.5 text-xs text-muted-foreground hover:text-destructive"
+            onClick={() => clearCart()}
+            disabled={clearCartPending}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Clear cart
+          </Button>
+        </div>
+
         {items.map((item) => (
           <CartItemCard key={item.id} item={item} />
         ))}

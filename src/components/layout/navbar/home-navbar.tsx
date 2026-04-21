@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Search } from "lucide-react";
+import { ShieldCheck, Search, LayoutDashboard } from "lucide-react";
 import { fetchUserProfileService } from "@/lib/services/user/fetch-user-profile.service";
 import { AUTH_ROUTES } from "@/lib/constants/auth";
 import LogoutButton from "./logout-button";
@@ -11,11 +11,11 @@ import { CartBadge } from "@/components/shop/cart-badge";
 import { WishlistBadge } from "@/components/shop/wishlist-badge";
 
 const navLinks = [
-  { label: "Home",        href: "/" },
-  { label: "Medicine",    href: "/products?category=medicines" },
-  { label: "Categories",  href: "/products" },
-  { label: "Best Sellers",href: "/products?sort=best-sellers" },
-  { label: "Offers",      href: "/products?offers=true" },
+  { label: "Home",         href: "/" },
+  { label: "Medicine",     href: "/products?category=medicines" },
+  { label: "Categories",   href: "/products" },
+  { label: "Best Sellers", href: "/products?sort=best-sellers" },
+  { label: "Offers",       href: "/products?offers=true" },
 ];
 
 export default async function HomeNavbar() {
@@ -106,12 +106,21 @@ export default async function HomeNavbar() {
             {profile ? (
               <div className="flex items-center gap-2">
                 <Greeting firstName={profile.first_name} />
-                <Avatar
-                  src={profile.avatar_url}
-                  fallback={profile.first_name}
-                  alt={profile.first_name}
-                  size="sm"
-                />
+                <Link
+                  href={profile.role === "admin" ? "/dashboard" : "/profile"}
+                  aria-label={profile.role === "admin" ? "Go to dashboard" : "Go to profile"}
+                  className={cn(
+                    "rounded-xl transition-all duration-200",
+                    "hover:ring-2 hover:ring-primary/30 hover:ring-offset-1",
+                  )}
+                >
+                  <Avatar
+                    src={profile.avatar_url}
+                    fallback={profile.first_name}
+                    alt={profile.first_name}
+                    size="sm"
+                  />
+                </Link>
                 <LogoutButton />
               </div>
             ) : (
@@ -145,19 +154,23 @@ export default async function HomeNavbar() {
         </div>
       </div>
 
-      {/* ── Navigation links bar — hidden on mobile ── */}
-      <div className="hidden border-t border-border/50 md:block">
+      {/* ── Navigation links bar — scrollable on mobile ── */}
+      <div className="border-t border-border/50">
         <div className="section-container">
           <nav
             aria-label="Main navigation"
-            className="flex items-center gap-1 py-1.5"
+            className={cn(
+              "flex items-center gap-1 py-1.5",
+              "overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none]",
+              "[&::-webkit-scrollbar]:hidden",
+            )}
           >
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium",
+                  "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium",
                   "text-muted-foreground transition-colors duration-150",
                   "hover:bg-primary/5 hover:text-primary",
                 )}
@@ -166,11 +179,35 @@ export default async function HomeNavbar() {
               </Link>
             ))}
 
-            <div className="ms-auto flex items-center gap-1">
+            <div className="ms-auto flex shrink-0 items-center gap-1">
+              {profile && (
+                <Link
+                  href="/allOrders"
+                  className={cn(
+                    "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium",
+                    "text-muted-foreground transition-colors duration-150",
+                    "hover:bg-primary/5 hover:text-primary",
+                  )}
+                >
+                  My Orders
+                </Link>
+              )}
+              <Link
+                href="/dashboard"
+                className={cn(
+                  "shrink-0 hidden items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium",
+                  "text-muted-foreground transition-colors duration-150",
+                  "hover:bg-primary/5 hover:text-primary",
+                  profile?.role === "admin" ? "md:flex" : "hidden",
+                )}
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                Dashboard
+              </Link>
               <Link
                 href="/about"
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium",
+                  "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium",
                   "text-muted-foreground transition-colors duration-150",
                   "hover:bg-primary/5 hover:text-primary",
                 )}
@@ -180,7 +217,7 @@ export default async function HomeNavbar() {
               <Link
                 href="/support"
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium",
+                  "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium",
                   "text-muted-foreground transition-colors duration-150",
                   "hover:bg-primary/5 hover:text-primary",
                 )}
