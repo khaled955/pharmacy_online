@@ -10,6 +10,7 @@ import {
   HeadphonesIcon,
   ShieldCheck,
   ChevronRight,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
 import ThemeToggle from "@/components/layout/navbar/theme-toggle";
@@ -18,39 +19,52 @@ import type { AuthUser } from "@/lib/types/auth";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/next-auth";
 
-/* ─── Sidebar nav items — ready for dynamic active state ── */
-const navSections = [
+type NavItem = { icon: React.ElementType; label: string; href: string };
+type NavSection = { label: string; items: NavItem[]; adminOnly?: boolean };
+
+const NAV_SECTIONS: NavSection[] = [
   {
     label: "Overview",
     items: [
       { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-      { icon: ShoppingBag,     label: "Orders",    href: "/dashboard/orders" },
+      { icon: ShoppingBag, label: "Orders", href: "/dashboard/orders" },
+    ],
+  },
+  {
+    label: "Admin",
+    adminOnly: true,
+    items: [
+      { icon: BarChart3, label: "Admin Panel", href: "/dashboard/admin" },
     ],
   },
   {
     label: "Catalogue",
     items: [
-      { icon: Package, label: "Products",  href: "/dashboard/products" },
-      { icon: Heart,   label: "Wishlist",  href: "/dashboard/wishlist" },
+      { icon: Package, label: "Products", href: "/dashboard/products" },
+      { icon: Heart, label: "Wishlist", href: "/dashboard/wishlist" },
     ],
   },
   {
     label: "Account",
     items: [
-      { icon: User,        label: "Profile",   href: "/dashboard/profile" },
-      { icon: MapPin,      label: "Addresses", href: "/dashboard/addresses" },
-      { icon: CreditCard,  label: "Payment",   href: "/dashboard/payment" },
+      { icon: User, label: "Profile", href: "/dashboard/profile" },
+      { icon: MapPin, label: "Addresses", href: "/dashboard/addresses" },
+      { icon: CreditCard, label: "Payment", href: "/dashboard/payment" },
     ],
   },
   {
     label: "Help",
     items: [
-      { icon: HeadphonesIcon, label: "Support",  href: "/dashboard/support" },
+      { icon: HeadphonesIcon, label: "Support", href: "/dashboard/support" },
     ],
   },
 ];
 
-function Sidebar() {
+function Sidebar({ isAdmin }: { isAdmin: boolean }) {
+  const visibleSections = NAV_SECTIONS.filter(
+    (s) => !s.adminOnly || isAdmin,
+  );
+
   return (
     <aside
       className={cn(
@@ -75,7 +89,7 @@ function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 space-y-5 px-3 py-5">
-        {navSections.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.label}>
             <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               {section.label}
@@ -90,8 +104,6 @@ function Sidebar() {
                       "text-sm font-medium text-sidebar-foreground",
                       "transition-colors duration-150",
                       "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      // Active state placeholder:
-                      // "bg-sidebar-accent text-sidebar-primary"
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -104,8 +116,8 @@ function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom: theme + back to shop */}
-      <div className="border-t border-border p-4 space-y-2">
+      {/* Bottom: back to shop */}
+      <div className="border-t border-border p-4">
         <Link
           href="/"
           className={cn(
@@ -133,7 +145,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar isAdmin={isAdmin} />
 
       {/* Main area */}
       <div className="flex flex-1 flex-col min-w-0">

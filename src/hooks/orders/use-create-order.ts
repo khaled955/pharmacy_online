@@ -1,6 +1,5 @@
 "use client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createOrderAction } from "@/lib/orders/create-order.action";
 import { QUERY_KEYS, SHOP_MUTATION_KEYS } from "@/lib/constants/shop";
@@ -9,7 +8,6 @@ import type { AuthResponse } from "@/lib/types/auth";
 
 export function useCreateOrder() {
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   type OrderMutationContext = {
     previousCart: CartItemRow[] | undefined;
@@ -43,21 +41,23 @@ export function useCreateOrder() {
       return { previousCart, previousCartCount };
     },
 
-    onSuccess: (response) => {
-      toast.success("Order placed successfully! 🎉");
-
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CART });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CART_COUNT });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ORDERS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECENT_ORDERS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ADMIN_STATS });
 
-      const orderId = response.data?.order?.id;
-      if (orderId) {
-        router.push(`/checkout/success?orderId=${orderId}`);
-      }
+      // Exact auth-module pattern: show toast first, redirect inside onAutoClose
+      toast.success("Order placed successfully! 🎉", {
+        duration: 2000,
+        onAutoClose: () => {
+          window.location.href = "/allOrders";
+        },
+      });
     },
 
     onError: (error, _payload, context) => {
-      // Rollback optimistic cart clear
       if (context?.previousCart !== undefined) {
         queryClient.setQueryData(QUERY_KEYS.CART, context.previousCart);
       }

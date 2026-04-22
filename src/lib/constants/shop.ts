@@ -18,6 +18,15 @@ export const QUERY_KEYS = {
   ORDERS: ["orders"] as const,
   ORDER: (orderId: string) => ["order", orderId] as const,
   ADDRESSES: ["addresses"] as const,
+  // Admin dashboard
+  ADMIN_STATS: ["admin", "stats"] as const,
+  DAILY_REVENUE: ["admin", "revenue", "daily"] as const,
+  MONTHLY_REVENUE: ["admin", "revenue", "monthly"] as const,
+  TOP_PRODUCTS: ["admin", "top-products"] as const,
+  RECENT_ORDERS: ["admin", "orders", "recent"] as const,
+  PENDING_ORDERS: ["admin", "orders", "pending"] as const,
+  PROCESSING_ORDERS: ["admin", "orders", "confirmed"] as const,
+  ADMIN_ORDER: (orderId: string) => ["admin", "order", orderId] as const,
 } as const;
 
 export const SHOP_MUTATION_KEYS = {
@@ -28,6 +37,7 @@ export const SHOP_MUTATION_KEYS = {
   ADD_TO_WISHLIST: ["wishlist", "add"] as const,
   REMOVE_FROM_WISHLIST: ["wishlist", "remove"] as const,
   CREATE_ORDER: ["orders", "create"] as const,
+  UPDATE_ORDER_STATUS: ["orders", "update-status"] as const,
   SAVE_ADDRESS: ["addresses", "save"] as const,
   DELETE_ADDRESS: ["addresses", "delete"] as const,
   MARK_NOTIFICATION_READ: ["notifications", "mark-read"] as const,

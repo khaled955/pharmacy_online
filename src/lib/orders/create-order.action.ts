@@ -205,45 +205,60 @@ export async function createOrderAction(
       })),
     });
 
-    // 8 — Fire-and-forget: emails + admin notification (non-blocking)
-    const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(userId);
-    const customerEmail = authUser?.email ?? null;
+    // 8 — Fetch customer email (non-blocking; does not gate admin notifications)
+    const {
+      data: { user: authUser },
+    } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const customerEmail = authUser?.email ?? "";
 
+    const addressLine = [order.city, order.area, order.street_address]
+      .filter(Boolean)
+      .join(", ");
+
+    const emailPayload: OrderEmailPayload = {
+      orderNumber: order.order_number,
+      customerName: order.customer_name,
+      customerEmail,
+      customerPhone: order.customer_phone,
+      address: addressLine || "N/A",
+      items: cartItems.map((item) => ({
+        name: item.products?.name_en ?? "",
+        quantity: item.quantity,
+        unitPrice: item.products?.price ?? 0,
+        lineTotal: (item.products?.price ?? 0) * item.quantity,
+      })),
+      subtotal: order.subtotal,
+      shippingFee: order.shipping_fee,
+      totalAmount: order.total_amount,
+      paymentMethod: order.payment_method,
+      notes: order.notes,
+      createdAt: order.created_at,
+    };
+
+    // 9 — Fire-and-forget: admin email + notification (always sent, not gated on customer email)
+    void Promise.allSettled([
+      sendAdminOrderEmail(emailPayload).catch((err) => {
+        console.error(
+          "[createOrder] Admin email failed:",
+          err instanceof Error ? err.message : err,
+        );
+      }),
+      createAdminNotification({
+        type: "NEW_ORDER",
+        title: "New Order Received",
+        message: `New order #${order.order_number} from ${(order.customer_name ?? customerEmail) || "Unknown"} — $${order.total_amount.toFixed(2)}`,
+        orderId: order.id,
+      }),
+    ]);
+
+    // 10 — Customer confirmation email (only when we have their address)
     if (customerEmail) {
-      const addressLine = [order.city, order.area, order.street_address]
-        .filter(Boolean)
-        .join(", ");
-
-      const emailPayload: OrderEmailPayload = {
-        orderNumber: order.order_number,
-        customerName: order.customer_name,
-        customerEmail,
-        customerPhone: order.customer_phone,
-        address: addressLine || "N/A",
-        items: cartItems.map((item) => ({
-          name: item.products?.name_en ?? "",
-          quantity: item.quantity,
-          unitPrice: item.products?.price ?? 0,
-          lineTotal: (item.products?.price ?? 0) * item.quantity,
-        })),
-        subtotal: order.subtotal,
-        shippingFee: order.shipping_fee,
-        totalAmount: order.total_amount,
-        paymentMethod: order.payment_method,
-        notes: order.notes,
-        createdAt: order.created_at,
-      };
-
-      void Promise.all([
-        sendAdminOrderEmail(emailPayload),
-        sendCustomerOrderEmail(emailPayload),
-        createAdminNotification({
-          type: "NEW_ORDER",
-          title: "New Order Received",
-          message: `New order #${order.order_number} from ${order.customer_name ?? customerEmail} — $${order.total_amount.toFixed(2)}`,
-          orderId: order.id,
-        }),
-      ]);
+      void sendCustomerOrderEmail(emailPayload).catch((err) => {
+        console.error(
+          "[createOrder] Customer email failed:",
+          err instanceof Error ? err.message : err,
+        );
+      });
     }
 
     return {

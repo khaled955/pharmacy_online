@@ -7,7 +7,8 @@ export type DashboardStats = {
   wishlistItems: number;
 };
 
-const ACTIVE_STATUSES = ["pending", "confirmed", "processing", "shipped"];
+// Real statuses from the orders schema
+const ACTIVE_STATUSES = ["pending", "confirmed"] as const;
 
 export async function getDashboardStats(userId: string): Promise<DashboardStats> {
   const supabase = await createClient();
