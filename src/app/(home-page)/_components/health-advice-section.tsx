@@ -3,6 +3,13 @@ import { Calendar, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { SectionHeader } from "@/components/shared/section-header";
 import { Badge } from "@/components/ui/badge";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface HealthArticle {
   id: string;
@@ -12,7 +19,6 @@ interface HealthArticle {
   readTime: string;
   date: string;
   href: string;
-  featured?: boolean;
 }
 
 const articles: HealthArticle[] = [
@@ -25,7 +31,6 @@ const articles: HealthArticle[] = [
     readTime: "4 min read",
     date: "Apr 12, 2026",
     href: "/health-advice/benefits-of-vitamin-d",
-    featured: true,
   },
   {
     id: "2",
@@ -36,7 +41,6 @@ const articles: HealthArticle[] = [
     readTime: "6 min read",
     date: "Apr 10, 2026",
     href: "/health-advice/daily-skin-care-routine",
-    featured: true,
   },
   {
     id: "3",
@@ -47,7 +51,26 @@ const articles: HealthArticle[] = [
     readTime: "5 min read",
     date: "Apr 8, 2026",
     href: "/health-advice/power-of-vitamin-c",
-    featured: true,
+  },
+  {
+    id: "4",
+    category: "Wellness",
+    title: "Building Healthy Sleep Habits for Better Recovery",
+    excerpt:
+      "Quality sleep is the foundation of good health. Explore proven strategies to improve your nightly rest.",
+    readTime: "5 min read",
+    date: "Apr 6, 2026",
+    href: "/health-advice/healthy-sleep-habits",
+  },
+  {
+    id: "5",
+    category: "Fitness",
+    title: "The Role of Magnesium in Muscle Health and Relaxation",
+    excerpt:
+      "Understand how magnesium supports muscle function, reduces cramps, and aids post-workout recovery.",
+    readTime: "4 min read",
+    date: "Apr 4, 2026",
+    href: "/health-advice/magnesium-muscle-health",
   },
 ];
 
@@ -56,7 +79,7 @@ function ArticleCard({ article }: { article: HealthArticle }) {
     <Link
       href={article.href}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl border border-border bg-card",
+        "group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card",
         "shadow-card transition-all duration-300",
         "hover:-translate-y-0.5 hover:shadow-card-hover hover:border-primary/20",
       )}
@@ -71,10 +94,8 @@ function ArticleCard({ article }: { article: HealthArticle }) {
           "overflow-hidden",
         )}
       >
-        <div className="text-primary/30">
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <span className="text-3xl">🌿</span>
-          </div>
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+          <span className="text-3xl">🌿</span>
         </div>
       </div>
 
@@ -90,7 +111,7 @@ function ArticleCard({ article }: { article: HealthArticle }) {
         <h3
           className={cn(
             "text-sm font-semibold leading-snug text-foreground",
-            "line-clamp-2 group-hover:text-primary transition-colors",
+            "line-clamp-2 transition-colors group-hover:text-primary",
           )}
         >
           {article.title}
@@ -126,11 +147,20 @@ export default function HealthAdviceSection() {
         viewAllLabel="All Articles"
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {articles.map((article) => (
-          <ArticleCard key={article.id} article={article} />
-        ))}
-      </div>
+      <Carousel opts={{ align: "start", loop: true }} className="w-full">
+        <CarouselContent className="-ml-4">
+          {articles.map((article) => (
+            <CarouselItem
+              key={article.id}
+              className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
+            >
+              <ArticleCard article={article} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="-left-4 hidden sm:flex" />
+        <CarouselNext className="-right-4 hidden sm:flex" />
+      </Carousel>
     </section>
   );
 }

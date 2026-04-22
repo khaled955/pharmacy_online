@@ -112,10 +112,17 @@ export function AddressMapPicker({ value, onChange }: AddressMapPickerProps) {
         <MapPin className="h-4 w-4 shrink-0 text-primary" />
         <span>Click the map or drag the pin to set your delivery location</span>
       </div>
-      <div
-        ref={containerRef}
-        className="h-64 w-full rounded-xl overflow-hidden border border-border"
-      />
+      {/*
+        isolation: isolate creates a new stacking context so that Leaflet's
+        internal z-indexes (400-1000) are scoped here and cannot overlap the
+        sticky navbar (z-50) on small screens.
+      */}
+      <div style={{ isolation: "isolate" }}>
+        <div
+          ref={containerRef}
+          className="h-64 w-full rounded-xl overflow-hidden border border-border"
+        />
+      </div>
       {value && (
         <p className="text-xs text-muted-foreground">
           Selected: {value.lat.toFixed(5)}, {value.lng.toFixed(5)}

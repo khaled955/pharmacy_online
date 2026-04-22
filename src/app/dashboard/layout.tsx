@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
 import ThemeToggle from "@/components/layout/navbar/theme-toggle";
+import { NotificationsBell } from "@/components/dashboard/notifications-bell";
+import type { AuthUser } from "@/lib/types/auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/next-auth";
 
 /* ─── Sidebar nav items — ready for dynamic active state ── */
 const navSections = [
@@ -118,11 +122,15 @@ function Sidebar() {
   );
 }
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession(authOptions);
+  const user = session?.user as AuthUser | undefined;
+  const isAdmin = user?.role === "admin";
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -147,6 +155,7 @@ export default function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-2 ms-auto">
+            {isAdmin && <NotificationsBell />}
             <ThemeToggle />
           </div>
         </header>

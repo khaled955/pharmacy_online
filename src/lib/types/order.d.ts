@@ -50,14 +50,7 @@ export type CreateOrderResult = {
 
 // ─── Status enums ─────────────────────────────────────────────────────────────
 
-export type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "processing"
-  | "shipped"
-  | "delivered"
-  | "cancelled"
-  | "refunded";
+export type OrderStatus = "pending" | "confirmed" | "ready" | "cancelled";
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 

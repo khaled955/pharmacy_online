@@ -30,6 +30,8 @@ export const SHOP_MUTATION_KEYS = {
   CREATE_ORDER: ["orders", "create"] as const,
   SAVE_ADDRESS: ["addresses", "save"] as const,
   DELETE_ADDRESS: ["addresses", "delete"] as const,
+  MARK_NOTIFICATION_READ: ["notifications", "mark-read"] as const,
+  MARK_ALL_NOTIFICATIONS_READ: ["notifications", "mark-all-read"] as const,
 } as const;
 
 // ─── Shipping ────────────────────────────────────────────────────────────────

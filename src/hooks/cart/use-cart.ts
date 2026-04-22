@@ -20,7 +20,10 @@ export function useCart() {
   return useQuery<CartItemRow[]>({
     queryKey: QUERY_KEYS.CART,
     queryFn: fetchCart,
-    staleTime: 1000 * 60 * 2,
+    // staleTime: 0 ensures the cart is always re-fetched on mount so that
+    // adding an item on another page and then navigating here never shows
+    // the old empty-cart stale snapshot before the refetch completes.
+    staleTime: 0,
   });
 }
 

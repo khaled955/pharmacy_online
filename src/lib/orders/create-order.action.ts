@@ -10,6 +10,10 @@ import type {
 } from "@/lib/types/order";
 import { SHOP_TABLES, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from "@/lib/constants/shop";
 import { buildAdminWhatsAppUrl } from "@/lib/notifications/order-messages";
+import { sendAdminOrderEmail } from "@/lib/services/email/send-admin-order-email";
+import { sendCustomerOrderEmail } from "@/lib/services/email/send-customer-order-email";
+import { createAdminNotification } from "@/lib/services/notifications/create-notification";
+import type { OrderEmailPayload } from "@/lib/types/email";
 
 type CartItemWithProduct = {
   id: string;
@@ -200,6 +204,47 @@ export async function createOrderAction(
         unitPrice: item.products?.price ?? 0,
       })),
     });
+
+    // 8 — Fire-and-forget: emails + admin notification (non-blocking)
+    const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const customerEmail = authUser?.email ?? null;
+
+    if (customerEmail) {
+      const addressLine = [order.city, order.area, order.street_address]
+        .filter(Boolean)
+        .join(", ");
+
+      const emailPayload: OrderEmailPayload = {
+        orderNumber: order.order_number,
+        customerName: order.customer_name,
+        customerEmail,
+        customerPhone: order.customer_phone,
+        address: addressLine || "N/A",
+        items: cartItems.map((item) => ({
+          name: item.products?.name_en ?? "",
+          quantity: item.quantity,
+          unitPrice: item.products?.price ?? 0,
+          lineTotal: (item.products?.price ?? 0) * item.quantity,
+        })),
+        subtotal: order.subtotal,
+        shippingFee: order.shipping_fee,
+        totalAmount: order.total_amount,
+        paymentMethod: order.payment_method,
+        notes: order.notes,
+        createdAt: order.created_at,
+      };
+
+      void Promise.all([
+        sendAdminOrderEmail(emailPayload),
+        sendCustomerOrderEmail(emailPayload),
+        createAdminNotification({
+          type: "NEW_ORDER",
+          title: "New Order Received",
+          message: `New order #${order.order_number} from ${order.customer_name ?? customerEmail} — $${order.total_amount.toFixed(2)}`,
+          orderId: order.id,
+        }),
+      ]);
+    }
 
     return {
       status: true,

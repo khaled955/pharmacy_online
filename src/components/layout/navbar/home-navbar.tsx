@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Search, LayoutDashboard } from "lucide-react";
+import { ShieldCheck, LayoutDashboard } from "lucide-react";
 import { fetchUserProfileService } from "@/lib/services/user/fetch-user-profile.service";
 import { AUTH_ROUTES } from "@/lib/constants/auth";
 import LogoutButton from "./logout-button";
@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { CartBadge } from "@/components/shop/cart-badge";
 import { WishlistBadge } from "@/components/shop/wishlist-badge";
+import { NavbarDesktopSearch, NavbarMobileSearch } from "./navbar-search";
 
 const navLinks = [
   { label: "Home",         href: "/" },
@@ -49,46 +50,13 @@ export default async function HomeNavbar() {
             </span>
           </Link>
 
-          {/* Search bar — hidden on mobile, shown md+ */}
-          <div className="hidden flex-1 max-w-md md:flex">
-            <div
-              className={cn(
-                "relative flex h-10 w-full items-center overflow-hidden rounded-xl",
-                "border border-border bg-background/70",
-                "focus-within:border-primary/40 focus-within:bg-background",
-                "focus-within:ring-4 focus-within:ring-primary/10",
-                "transition-all duration-200",
-              )}
-            >
-              <Search className="ms-3 h-4 w-4 shrink-0 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Search medicines, vitamins, brands…"
-                className={cn(
-                  "h-full w-full bg-transparent px-2.5",
-                  "text-sm text-foreground placeholder:text-muted-foreground/70",
-                  "border-0 outline-none ring-0",
-                )}
-              />
-            </div>
-          </div>
+          {/* Search — desktop bar (md+) opens overlay dialog */}
+          <NavbarDesktopSearch />
 
           {/* Right cluster */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Mobile search icon */}
-            <button
-              type="button"
-              aria-label="Search"
-              className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-xl",
-                "border border-border bg-card text-muted-foreground",
-                "shadow-sm transition-all duration-200",
-                "hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
-                "md:hidden",
-              )}
-            >
-              <Search className="h-4 w-4" />
-            </button>
+            {/* Search — mobile icon (hidden md+) opens overlay dialog */}
+            <NavbarMobileSearch />
 
             {/* Wishlist — dynamic count badge */}
             <WishlistBadge />

@@ -1,6 +1,8 @@
+"use client";
 import Link from "next/link";
-import { Search, ShieldCheck, Truck, Clock, Star } from "lucide-react";
+import { ShieldCheck, Truck, Clock, Star } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
+import { SearchDialog } from "@/components/shared/search-dialog";
 
 const trustBadges = [
   { icon: ShieldCheck, label: "Secure Checkout",    color: "text-primary" },
@@ -12,6 +14,48 @@ const trustBadges = [
 const popularSearches = [
   "Panadol", "Vitamin C", "Aspirin", "Centrum", "Skin Care",
 ];
+
+// The hero search bar — renders like an input but opens the search dialog on click.
+function HeroSearchBarTrigger() {
+  return (
+    <div
+      className={cn(
+        "flex h-13 w-full max-w-lg items-center overflow-hidden rounded-2xl",
+        "border border-border bg-card shadow-card",
+        "hover:border-primary/40 hover:shadow-card-hover",
+        "hover:ring-4 hover:ring-primary/10",
+        "transition-all duration-200 cursor-text",
+      )}
+      aria-hidden="true"
+    >
+      <div className="ms-4 flex h-5 w-5 items-center justify-center text-muted-foreground">
+        {/* inline SVG avoids a separate import in this render-only node */}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+      </div>
+      <span
+        className={cn(
+          "flex-1 px-3 text-sm text-muted-foreground/60 select-none",
+        )}
+      >
+        Search for medicines, vitamins, brands…
+      </span>
+      <div className="p-1.5">
+        <div
+          className={cn(
+            "flex h-9 items-center gap-1.5 rounded-xl px-4",
+            "bg-gradient-brand text-sm font-semibold text-white",
+            "pointer-events-none",
+          )}
+        >
+          Search
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function HeroSection() {
   return (
@@ -62,39 +106,11 @@ export default function HeroSection() {
               fast delivery, trusted products, and smart AI assistance.
             </p>
 
-            {/* Search bar */}
-            <div
-              className={cn(
-                "relative flex h-13 w-full max-w-lg items-center overflow-hidden rounded-2xl",
-                "border border-border bg-card shadow-card",
-                "focus-within:border-primary/40 focus-within:shadow-card-hover",
-                "focus-within:ring-4 focus-within:ring-primary/10",
-                "transition-all duration-200",
-              )}
-            >
-              <Search className="ms-4 h-5 w-5 shrink-0 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Search for medicines, vitamins, brands…"
-                className={cn(
-                  "h-full flex-1 bg-transparent px-3",
-                  "text-sm text-foreground placeholder:text-muted-foreground/60",
-                  "border-0 outline-none ring-0",
-                )}
-              />
-              <div className="p-1.5">
-                <button
-                  type="button"
-                  className={cn(
-                    "flex h-9 items-center gap-1.5 rounded-xl px-4",
-                    "bg-gradient-brand text-sm font-semibold text-white",
-                    "transition-opacity duration-150 hover:opacity-90",
-                  )}
-                >
-                  Search
-                </button>
-              </div>
-            </div>
+            {/* Search bar — clicking opens the overlay search dialog */}
+            <SearchDialog
+              triggerContent={<HeroSearchBarTrigger />}
+              triggerClassName="w-full max-w-lg"
+            />
 
             {/* Popular searches */}
             <div className="mt-3 flex flex-wrap items-center gap-2">

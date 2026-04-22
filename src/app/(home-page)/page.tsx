@@ -12,6 +12,12 @@ import BrandsSection from "./_components/brands-section";
 import AiAssistantBanner from "./_components/ai-assistant-banner";
 import SiteReviewsSection from "./_components/site-reviews-section";
 
+// [NEW] Virtual Pharmacy Experience imports
+// [SAFE] Only rendered when ENABLE_VIRTUAL_EXPERIENCE = true; original components untouched
+import { ENABLE_VIRTUAL_EXPERIENCE } from "@/lib/constants/virtual-pharmacy";
+import PharmacyExperienceHero from "@/components/virtual-pharmacy/pharmacy-experience-hero";
+import VirtualShelfCategories from "@/components/virtual-pharmacy/virtual-shelf-categories";
+
 /* ── Per-section skeleton fallbacks ── */
 function CategoriesFallback() {
   return (
@@ -37,15 +43,26 @@ export default async function Home() {
 
   return (
     <div>
-      {/* 1. Hero + search + trust bar (static — no fetch) */}
-      <HeroSection />
+      {/*
+        [MODIFIED] Hero section:
+        - When ENABLE_VIRTUAL_EXPERIENCE=true → PharmacyExperienceHero (new, with mascot + journey CTA)
+        - When false → original HeroSection (static, no fetch)
+        [REVERSIBLE] Toggle ENABLE_VIRTUAL_EXPERIENCE in src/lib/constants/virtual-pharmacy.ts
+      */}
+      {ENABLE_VIRTUAL_EXPERIENCE ? <PharmacyExperienceHero /> : <HeroSection />}
 
-      {/* 2. Category grid */}
+      {/*
+        [MODIFIED] Categories section:
+        - When ENABLE_VIRTUAL_EXPERIENCE=true → VirtualShelfCategories (drawer interaction)
+        - When false → original CategoriesSection (plain grid, no drawer)
+      */}
       <ErrorBoundary>
         <Suspense fallback={<CategoriesFallback />}>
-          <CategoriesSection />
+          {ENABLE_VIRTUAL_EXPERIENCE ? <VirtualShelfCategories /> : <CategoriesSection />}
         </Suspense>
       </ErrorBoundary>
+
+      {/* ── All sections below are [SAFE] — unchanged from original ── */}
 
       <Separator className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" />
 

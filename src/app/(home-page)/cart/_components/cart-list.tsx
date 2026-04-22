@@ -10,10 +10,12 @@ import { useClearCart } from "@/hooks/cart/use-clear-cart";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function CartList() {
-  const { data: items = [], isLoading, isError } = useCart();
+  const { data: items = [], isLoading, isFetching, isError } = useCart();
   const { clearCart, clearCartPending } = useClearCart();
 
-  if (isLoading) {
+  // Show skeleton while loading OR while a background refetch is running on an
+  // empty cache — prevents a flash of the "empty cart" state before items arrive.
+  if (isLoading || (isFetching && items.length === 0)) {
     return (
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-3">
