@@ -30,6 +30,7 @@ import { useUpdateOrderStatus } from "@/hooks/orders/use-update-order-status";
 import type { AdminOrderStats } from "@/lib/types/dashboard";
 import type { AdminOrder } from "@/lib/types/dashboard";
 import type { OrderStatus } from "@/lib/types/order";
+import Image from "next/image";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -138,7 +139,7 @@ function StatsGrid({
         const raw = stats?.[key] ?? 0;
         const value =
           format === "currency"
-            ? `$${Number(raw).toFixed(2)}`
+            ? `$${Number(raw)?.toFixed(2) || "0"}`
             : String(Number(raw));
 
         return (
@@ -208,7 +209,7 @@ function TopProductsSection() {
                   {i + 1}
                 </span>
                 {product.product_image_url ? (
-                  <img
+                  <Image
                     src={product.product_image_url}
                     alt={product.product_name_en}
                     className="h-10 w-10 rounded-xl object-cover"
@@ -228,7 +229,7 @@ function TopProductsSection() {
                 </div>
                 <div className="text-end">
                   <p className="text-sm font-semibold text-foreground">
-                    ${product.total_revenue.toFixed(2)}
+                    ${product?.total_revenue?.toFixed(2) || "0"}
                   </p>
                   <p className="text-xs text-muted-foreground">revenue</p>
                 </div>
@@ -367,7 +368,7 @@ function OrdersTable({
                   </Badge>
                 </td>
                 <td className="px-5 py-4 font-semibold text-foreground whitespace-nowrap">
-                  ${order.total_amount.toFixed(2)}
+                  ${order?.total_amount?.toFixed(2) || "0.00"}
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1.5">
