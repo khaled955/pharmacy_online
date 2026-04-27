@@ -140,16 +140,17 @@ export default function AboutPage() {
             </h2>
             <div className="mt-5 space-y-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
               <p>
-                MedBox is a fully licensed online pharmacy dedicated to providing
-                safe, high-quality medicines and wellness products directly to
-                your home. We work with certified pharmaceutical distributors to
-                ensure every product you receive is genuine and effective.
+                MedBox is a fully licensed online pharmacy dedicated to
+                providing safe, high-quality medicines and wellness products
+                directly to your home. We work with certified pharmaceutical
+                distributors to ensure every product you receive is genuine and
+                effective.
               </p>
               <p>
-                Our team of registered pharmacists, healthcare professionals, and
-                customer care specialists work together to give you a seamless and
-                safe experience — from browsing our catalogue to receiving your
-                order.
+                Our team of registered pharmacists, healthcare professionals,
+                and customer care specialists work together to give you a
+                seamless and safe experience — from browsing our catalogue to
+                receiving your order.
               </p>
               <p>
                 We believe everyone deserves easy access to the medicines and

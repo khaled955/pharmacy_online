@@ -1,7 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-import type { AuthUser } from "@/lib/types/auth";
+import type { NextAuthUserPayload, SessionUser } from "@/lib/types/auth";
 import { loginAction } from "./lib/auth/login.action";
 
 export const authOptions: NextAuthOptions = {
@@ -32,23 +32,39 @@ export const authOptions: NextAuthOptions = {
           throw new Error(payload.message || "Error During LogIn!");
         }
 
-        return payload.data;
+        const sessionUser: SessionUser = {
+          id: payload.data.id,
+          avatar_url: payload.data.avatar_url,
+          email: payload.data.email,
+          first_name: payload.data.first_name,
+          last_name: payload.data.last_name,
+          phone: payload.data.phone,
+          role: payload.data.role,
+        };
+
+        return {
+          id: payload.data.id,
+          accessToken: payload.data.accessToken,
+          user: sessionUser,
+        };
       },
     }),
   ],
 
   callbacks: {
     async jwt({ token, user, trigger, session }) {
+      // in case of login
       if (user) {
-        token.user = user as AuthUser;
+        token.user = user as NextAuthUserPayload;
       }
 
       if (trigger === "update" && session?.user && token.user) {
-        const currentUser = token.user as AuthUser;
         token.user = {
-          ...currentUser,
-          ...session.user,
-          accessToken: currentUser.accessToken,
+          ...token.user,
+          user: {
+            ...token.user.user,
+            ...session.user,
+          },
         };
       }
 
@@ -56,12 +72,15 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      session.user = token.user as AuthUser;
+      if (token.user) {
+        session.user = token.user.user;
+      }
+
       return session;
     },
   },
 
   jwt: {
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60, // 7 days
   },
 };

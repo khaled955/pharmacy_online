@@ -16,7 +16,6 @@ function makeQueryClient() {
         staleTime: 1000 * 60 * 60 * 6, // 6 hours default
         refetchOnMount: false,
         refetchOnWindowFocus: false,
-        retry: 1,
       },
     },
   });

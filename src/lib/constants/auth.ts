@@ -71,6 +71,8 @@ export const AUTH_COOKIES = {
 /** Minutes the pw_reset_verified cookie stays alive */
 export const RESET_COOKIE_EXPIRY_MINUTES = 15;
 
+// seconds to redirected after success
+export const AUTH_REDIRECT_DURATION = 2000   // 2seconds
 //Supabase table names
 export const DB_TABLES = {
   PROFILES: "profiles",

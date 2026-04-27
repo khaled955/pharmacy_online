@@ -1,15 +1,10 @@
-import type { AuthUser, UserRole } from "./auth";
-
-type SessionUser = Omit<AuthUser, "accessToken">;
+import type { SessionUser } from "./auth";
 
 declare module "next-auth" {
   interface User {
-    first_name: string;
-    last_name: string;
-    phone: string | null;
-    avatar_url: string | null;
-    role: UserRole;
+    id: string;
     accessToken: string;
+    user: SessionUser;
   }
 
   interface Session {
@@ -19,6 +14,10 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
-    user?: AuthUser;
+    user?: {
+      id: string;
+      accessToken: string;
+      user: SessionUser;
+    };
   }
 }

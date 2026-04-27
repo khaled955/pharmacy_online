@@ -1,22 +1,23 @@
+
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import ErrorBoundary from "@/components/shared/error-boundary";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton, SectionHeaderSkeleton } from "@/components/ui/skeleton";
-import HeroSection from "./_components/hero-section";
-import CategoriesSection from "./_components/categories-section";
-import PromotionsBanner from "./_components/promotions-banner";
-import FeaturedProductsSection from "./_components/featured-products-section";
-import HealthAdviceSection from "./_components/health-advice-section";
-import BrandsSection from "./_components/brands-section";
-import AiAssistantBanner from "./_components/ai-assistant-banner";
-import SiteReviewsSection from "./_components/site-reviews-section";
 
 // [NEW] Virtual Pharmacy Experience imports
 // [SAFE] Only rendered when ENABLE_VIRTUAL_EXPERIENCE = true; original components untouched
 import { ENABLE_VIRTUAL_EXPERIENCE } from "@/lib/constants/virtual-pharmacy";
 import PharmacyExperienceHero from "@/components/virtual-pharmacy/pharmacy-experience-hero";
 import VirtualShelfCategories from "@/components/virtual-pharmacy/virtual-shelf-categories";
+import HeroSection from "../_components/hero-section";
+import CategoriesSection from "../_components/categories-section";
+import PromotionsBanner from "../_components/promotions-banner";
+import FeaturedProductsSection from "../_components/featured-products-section";
+import BrandsSection from "../_components/brands-section";
+import SiteReviewsSection from "../_components/site-reviews-section";
+import HealthAdviceSection from "../_components/health-advice-section";
+import AiAssistantBanner from "../_components/ai-assistant-banner";
 
 /* ── Per-section skeleton fallbacks ── */
 function CategoriesFallback() {

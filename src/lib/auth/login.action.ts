@@ -2,11 +2,10 @@
 
 import { LoginFields } from "../schemas/auth/login.schema";
 import { supabaseAdmin } from "../supabase/admin";
-import type { AuthResponse, AuthUser } from "../types/auth";
 
 export async function loginAction(
   loginValues: LoginFields,
-): Promise<AuthResponse<AuthUser>> {
+) {
   try {
     const { data, error } = await supabaseAdmin.auth.signInWithPassword({
       email: loginValues.email,

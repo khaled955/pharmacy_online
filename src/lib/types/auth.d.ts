@@ -2,6 +2,7 @@ import { LucideIcon } from "lucide-react";
 
 export type UserRole = "customer" | "admin";
 
+// data returned from database
 export type AuthUser = {
   id: string;
   email: string;
@@ -11,6 +12,16 @@ export type AuthUser = {
   avatar_url: string | null;
   role: UserRole;
   accessToken: string;
+};
+
+// data that returned from session next-auth
+export type SessionUser = Omit<AuthUser, "accessToken">;
+
+// data returned from Jwt function  in next-auth
+export type NextAuthUserPayload = {
+  id: string;
+  accessToken: string;
+  user: SessionUser;
 };
 
 export type SuccessResponse<T = null> = {
