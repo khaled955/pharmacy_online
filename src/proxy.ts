@@ -14,7 +14,7 @@ const AUTH_PATHS = ["/login", "/register", "/forgot-password"];
 
 const DASHBOARD_PREFIX = "/dashboard";
 
-export default async function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const token = await getToken({ req });
   const pathname = req.nextUrl.pathname;
   const homeUrl = new URL("/", req.nextUrl.origin);

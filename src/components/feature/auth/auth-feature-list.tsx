@@ -6,10 +6,10 @@ export default function AuthFeatureList() {
       {AUTH_FEATURES.map(({ icon: Icon, title, desc }) => (
         <li key={title} className="flex items-start gap-3">
           <span
-            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center
+            className="mt-0.5 flex size-8 shrink-0 items-center justify-center
               rounded-lg bg-white/15"
           >
-            <Icon className="h-4 w-4 text-white" />
+            <Icon className="size-4 text-white" />
           </span>
 
           <div>
