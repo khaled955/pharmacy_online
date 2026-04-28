@@ -1,6 +1,5 @@
 
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
 import ErrorBoundary from "@/components/shared/error-boundary";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton, SectionHeaderSkeleton } from "@/components/ui/skeleton";
@@ -18,6 +17,7 @@ import BrandsSection from "../_components/brands-section";
 import SiteReviewsSection from "../_components/site-reviews-section";
 import HealthAdviceSection from "../_components/health-advice-section";
 import AiAssistantBanner from "../_components/ai-assistant-banner";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 /* ── Per-section skeleton fallbacks ── */
 function CategoriesFallback() {
@@ -35,7 +35,7 @@ function CategoriesFallback() {
 
 export default async function Home() {
   /* ── Auth check — logic unchanged ── */
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createClient() {
+export async function createClientFromServer() {
   // Get the cookie store for the current request/response cycle
   // Used to read/write Supabase auth session (access token, refresh token)
   const cookieStore = await cookies();

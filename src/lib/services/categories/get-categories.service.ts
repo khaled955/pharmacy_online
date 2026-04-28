@@ -1,9 +1,9 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
 import type { CategoryRow } from "@/lib/types/product";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export async function getCategories(): Promise<CategoryRow[]> {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
 
   const { data, error } = await supabase
     .from("categories")

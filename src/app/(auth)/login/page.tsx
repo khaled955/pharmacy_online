@@ -1,5 +1,10 @@
 import AuthHeader from "@/components/feature/auth/auth-header";
 import LoginForm from "./_components/login-form";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "login",
+};
 
 export default function LoginPage() {
   return (

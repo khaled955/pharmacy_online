@@ -1,23 +1,24 @@
 "use server";
 
 import { LoginFields } from "../schemas/auth/login.schema";
-import { supabaseAdmin } from "../supabase/admin";
+import { createClientFromServer } from "../supabase/server";
 
-export async function loginAction(
-  loginValues: LoginFields,
-) {
+export async function loginAction(loginValues: LoginFields) {
+  const supabase = await createClientFromServer();
+
   try {
-    const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+    // check email and password from server
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: loginValues.email,
       password: loginValues.password,
-      
     });
 
     if (error) throw new Error(error.message);
     if (!data.user) throw new Error("Login failed");
     if (!data.session?.access_token) throw new Error("Access token not found");
 
-    const { data: profile, error: profileError } = await supabaseAdmin
+    // return user data after success login
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("first_name, last_name, phone, avatar_url, role")
       .eq("id", data.user.id)
@@ -44,7 +45,7 @@ export async function loginAction(
         accessToken: data.session.access_token,
       },
     };
-  } catch (err: unknown) {
+  } catch (err) {
     return {
       status: false,
       message: err instanceof Error ? err.message : "Login failed",

@@ -1,14 +1,14 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
 import type { ProductCardData } from "@/lib/types/product";
 import {
   PRODUCT_CARD_SELECT,
   mapProductCardRow,
   throwOnDbError,
 } from "./_product-helpers";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export async function getTrendingProducts(limit = 4): Promise<ProductCardData[]> {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
 
   const { data, error } = await supabase
     .from("products")
