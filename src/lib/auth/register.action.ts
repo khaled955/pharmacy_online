@@ -1,87 +1,3 @@
-// "use server";
-// import { OTP_TYPES } from "@/lib/constants/auth.constant";
-// import { sendOtpService } from "./send-otp.service";
-// import { RegisterFormValues } from "../schemas/auth/register.schema";
-// import { createClientFromServer } from "../supabase/server";
-// import { supabaseAdmin } from "../supabase/admin";
-
-// export async function registerAction(input: RegisterFormValues) {
-//   const supabase = await createClientFromServer();
-//   let avatar_url: string | null = null;
-
-//   try {
-//     // // Upload avatar to Supabase Storage when a file was selected
-//     // if (input.avatar) {
-//     //   const fileExt = input.avatar.name.split(".").pop();
-//     //   // create photo name
-//     //   const fileName = `avatars/${crypto.randomUUID()}.${fileExt}`;
-
-//     //   const { data: uploadData, error: uploadError } = await supabase.storage
-//     //     .from("product-images")
-//     //     .upload(fileName, input.avatar);
-
-//     //   if (uploadError) throw new Error(uploadError.message);
-
-//     //   const { data: urlData } = supabase.storage
-//     //     .from("product-images")
-//     //     .getPublicUrl(uploadData.path);
-
-//     //   avatar_url = urlData.publicUrl;
-//     // }
-
-//     // // Check email availability before sending OTP
-//     // const { data } = await supabaseAdmin.auth.admin.listUsers();
-//     // const existingUser = data.users.find((user) => user.email === input.email);
-
-//     // if (existingUser) {
-//     //   return {
-//     //     status: false,
-//     //     message: "Email already registered",
-//     //     data: null,
-//     //   };
-//     // }
-
-//     // Check email availability before uploading avatar
-//     const { data, error } = await supabaseAdmin.auth.admin.listUsers();
-
-//     if (error) {
-//       throw new Error(error.message);
-//     }
-
-//     const existingUser = data.users.find(
-//       (user) => user.email?.toLowerCase() === input.email.toLowerCase(),
-//     );
-
-//     if (existingUser) {
-//       return {
-//         status: false,
-//         message: "Email already registered",
-//         data: null,
-//       };
-//     }
-
-//     // Send verification OTP to the user's email
-//     const otpData = await sendOtpService(input.email, OTP_TYPES.REGISTER);
-//     if (!otpData.status) throw new Error(otpData.message);
-
-//     return {
-//       status: true,
-//       message: "OTP sent to your email",
-//       data: {
-//         email: input.email,
-//         avatar_url,
-//         otp: otpData.data?.otp ?? null,
-//       },
-//     };
-//   } catch (err: unknown) {
-//     return {
-//       status: false,
-//       message: err instanceof Error ? err.message : "Registration failed",
-//       data: null,
-//     };
-//   }
-// }
-
 "use server";
 
 import { OTP_TYPES } from "@/lib/constants/auth.constant";
@@ -138,8 +54,8 @@ export async function registerAction(input: RegisterFormValues) {
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(AVATAR_BUCKET)
         .upload(fileName, input.avatar, {
-          cacheControl: "3600",
-          upsert: false,
+          cacheControl: "3600", // 1 hour
+          upsert: false, // dont replace with other file if has same name will give error
         });
 
       if (uploadError) {

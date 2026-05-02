@@ -194,12 +194,7 @@ export default function RegisterForm() {
     setIsAvatarUploading(false);
   }
 
-  // Derived error messages
-  // const step1ServerError =
-  //   registerMutation.data && !registerMutation.data.status
-  //     ? registerMutation.data.message
-  //     : null;
-
+  
   const verifyError =
     verifyMutation.data && !verifyMutation.data.status
       ? verifyMutation.data.message
