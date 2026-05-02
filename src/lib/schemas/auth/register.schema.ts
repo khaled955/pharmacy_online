@@ -1,7 +1,7 @@
 import {
   FIRST_LAST_NAME_PATTERN,
   SAUDI_PHONE_PATTERN,
-} from "@/lib/constants/auth";
+} from "@/lib/constants/auth.constant";
 import { z } from "zod";
 
 export default function useRegisterSchema() {

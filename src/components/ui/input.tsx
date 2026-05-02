@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Eye, EyeOff, Lock, Mail, Search, User } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
-import { PASSWORD_PATTERN } from "@/lib/constants/auth";
+import { PASSWORD_PATTERN } from "@/lib/constants/auth.constant";
 
 type NativeInputProps = React.ComponentProps<"input">;
 

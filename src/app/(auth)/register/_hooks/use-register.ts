@@ -2,13 +2,11 @@ import { useMutation } from "@tanstack/react-query";
 import { registerAction } from "@/lib/auth/register.action";
 import { verifyRegisterOtpAction } from "@/lib/auth/verify-register-otp.action";
 import { sendOtpAction } from "@/lib/auth/send-otp.action";
-import { OTP_TYPES } from "@/lib/constants/auth";
+import { OTP_TYPES } from "@/lib/constants/auth.constant";
 import type {
   AuthResponse,
-  RegisterResponseData,
   VerifyOtpResponseData,
   SendOtpResponseData,
-  ErrorResponse,
 } from "@/lib/types/auth";
 import { RegisterFormValues } from "@/lib/schemas/auth/register.schema";
 
@@ -28,13 +26,15 @@ type RegisterVerifyOtp = {
 
 // ── Step 1: submit registration form — uploads avatar + sends OTP
 export function useRegister() {
-  return useMutation<
-    AuthResponse<RegisterResponseData>,
-    ErrorResponse,
-    RegisterFormValues
-  >({
-    mutationFn: (formFields) => registerAction(formFields),
+  const {
+    mutate: onRegister,
+    error: regiseterError,
+    isPending: regiseterIsPending,
+    reset:registerReset,
+  } = useMutation({
+    mutationFn: (formFields: RegisterFormValues) => registerAction(formFields),
   });
+  return { onRegister, regiseterError, regiseterIsPending,registerReset };
 }
 
 // ── Step 2a: verify the OTP — creates the Supabase user on success

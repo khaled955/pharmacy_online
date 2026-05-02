@@ -1,7 +1,7 @@
 "use client";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { OTP_CONFIG } from "@/lib/constants/auth";
+import { OTP_CONFIG } from "@/lib/constants/auth.constant";
 import { type ForgotPasswordOtpInput } from "@/lib/schemas/auth/forgot-password.schema";
 
 type RegisterOtpFormProps = {

@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
 import type { AuthResponse, SendOtpResponseData } from "@/lib/types/auth";
-import { OTP_TYPES } from "@/lib/constants/auth";
+import { OTP_TYPES } from "@/lib/constants/auth.constant";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,7 +20,8 @@ export async function sendOtpService(
   if (!email) {
     return {
       status: false,
-      message: locale === "ar" ? "البريد الإلكتروني مطلوب" : "Email is required",
+      message:
+        locale === "ar" ? "البريد الإلكتروني مطلوب" : "Email is required",
       data: null,
     };
   }
@@ -45,7 +46,9 @@ export async function sendOtpService(
       };
     }
 
-    const { users } = (await searchRes.json()) as { users?: { email?: string }[] };
+    const { users } = (await searchRes.json()) as {
+      users?: { email?: string }[];
+    };
     const userExists = (users ?? []).some(
       (u) => u.email?.toLowerCase() === email.toLowerCase(),
     );

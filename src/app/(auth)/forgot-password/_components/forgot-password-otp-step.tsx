@@ -9,7 +9,7 @@ import {
   useForgotPasswordOtpSchema,
 } from "@/lib/schemas/auth/forgot-password.schema";
 import { Button } from "@/components/ui/button";
-import { OTP_CONFIG } from "@/lib/constants/auth";
+import { OTP_CONFIG } from "@/lib/constants/auth.constant";
 
 interface Props {
   devOtp: string | null;
@@ -54,7 +54,9 @@ export default function ForgotPasswordOtpStep({
 
       {errorMessage && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
-          <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {errorMessage}
+          </p>
         </div>
       )}
 

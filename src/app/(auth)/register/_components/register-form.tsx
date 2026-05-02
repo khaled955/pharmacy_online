@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -21,9 +20,8 @@ import {
   AUTH_ROUTES,
   OTP_CONFIG,
   REGISTER_STEPS,
-  type RegisterStep,
-} from "@/lib/constants/auth";
-import type { RegisterResponseData } from "@/lib/types/auth";
+} from "@/lib/constants/auth.constant";
+import type { RegisterResponseData, RegisterStep } from "@/lib/types/auth";
 import useRegisterSchema, {
   RegisterFormValues,
 } from "@/lib/schemas/auth/register.schema";
@@ -31,6 +29,7 @@ import useRegisterSchema, {
 import RegisterStepIndicator from "./register-step-indicator";
 import RegisterInfoStep from "./register-info-step";
 import RegisterOtpStep from "./register-otp-step";
+import AuthHeader from "@/components/feature/auth/auth-header";
 
 type PendingUser = {
   first_name: string;
@@ -54,7 +53,8 @@ export default function RegisterForm() {
   const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
 
   // Mutations
-  const registerMutation = useRegister();
+  const { onRegister, regiseterError, regiseterIsPending, registerReset } =
+    useRegister();
   const verifyMutation = useVerifyRegisterOtp();
   const resendMutation = useResendRegisterOtp();
 
@@ -75,7 +75,7 @@ export default function RegisterForm() {
       phone: "",
       password: "",
       confirm_password: "",
-      avatar: undefined,
+      avatar: null,
     },
   });
 
@@ -96,7 +96,7 @@ export default function RegisterForm() {
   // Handlers
 
   const onSubmit: SubmitHandler<RegisterFormValues> = (values) => {
-    registerMutation.mutate(values, {
+    onRegister(values, {
       onSuccess: (data) => {
         if (!data.status) {
           toast.error(data.message);
@@ -155,7 +155,7 @@ export default function RegisterForm() {
   };
 
   const onBack = () => {
-    registerMutation.reset();
+    registerReset();
     verifyMutation.reset();
     resendMutation.reset();
     otpReset();
@@ -195,10 +195,10 @@ export default function RegisterForm() {
   }
 
   // Derived error messages
-  const step1ServerError =
-    registerMutation.data && !registerMutation.data.status
-      ? registerMutation.data.message
-      : null;
+  // const step1ServerError =
+  //   registerMutation.data && !registerMutation.data.status
+  //     ? registerMutation.data.message
+  //     : null;
 
   const verifyError =
     verifyMutation.data && !verifyMutation.data.status
@@ -206,24 +206,18 @@ export default function RegisterForm() {
       : null;
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-8 text-center">
-        <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg dark:bg-teal-700">
-          <ShieldCheck className="h-8 w-8 text-white" />
-        </div>
-
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {step === REGISTER_STEPS.FORM
-            ? "Create account"
-            : "Verify your email"}
-        </h1>
-
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {step === REGISTER_STEPS.FORM
+    <section className="w-full max-w-md">
+      {/* header */}
+      <AuthHeader
+        title={
+          step === REGISTER_STEPS.FORM ? "Create account" : "Verify your email"
+        }
+        description={
+          step === REGISTER_STEPS.FORM
             ? "Join our pharmacy platform today"
-            : `We sent a ${OTP_CONFIG.LENGTH}-digit code to ${registeredEmail}`}
-        </p>
-      </div>
+            : `We sent a ${OTP_CONFIG.LENGTH}-digit code to ${registeredEmail}`
+        }
+      />
 
       <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl dark:border-gray-800 dark:bg-gray-900">
         <RegisterStepIndicator step={step} />
@@ -232,8 +226,8 @@ export default function RegisterForm() {
           <RegisterInfoStep
             formRegister={formRegister}
             errors={errors}
-            isLoading={registerMutation.isPending}
-            serverError={step1ServerError}
+            isLoading={regiseterIsPending}
+            serverError={regiseterError?.message}
             avatarPreview={avatarPreview}
             onAvatarChange={handleAvatarChange}
             onAvatarRemove={handleAvatarRemove}
@@ -260,6 +254,6 @@ export default function RegisterForm() {
           />
         )}
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,5 +1,4 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
 import type { ProductCardData, ProductFilters } from "@/lib/types/product";
 import type { PaginatedResponse } from "@/lib/types/api";
 import {
@@ -7,6 +6,7 @@ import {
   mapProductCardRow,
   throwOnDbError,
 } from "./_product-helpers";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ type ProductBrandRow = {
 export async function getProducts(
   filters: ProductFilters = {},
 ): Promise<PaginatedResponse<ProductCardData>> {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
 
   const page = filters.page ?? 1;
   const limit = filters.limit ?? DEFAULT_LIMIT;
@@ -128,7 +128,7 @@ export async function getProducts(
 }
 
 export async function getProductBrands(): Promise<string[]> {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
 
   const { data, error } = await supabase
     .from("products")

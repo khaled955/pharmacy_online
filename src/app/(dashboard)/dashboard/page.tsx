@@ -13,10 +13,10 @@ import { cn } from "@/lib/utils/tailwind-merge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeader } from "@/components/shared/section-header";
-import { createClient } from "@/lib/supabase/server";
 import { getDashboardStats } from "@/lib/services/dashboard/get-dashboard-stats.service";
 import { getRecentOrders } from "@/lib/services/orders/get-orders.service";
 import type { OrderStatus } from "@/lib/types/order";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 /* ─── Status display map ─────────────────────────────────────── */
 
@@ -91,7 +91,7 @@ function StatCard({
 /* ─── Page ───────────────────────────────────────────────────── */
 
 export default async function DashboardHomePage() {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();

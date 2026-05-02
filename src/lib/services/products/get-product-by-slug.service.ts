@@ -1,11 +1,11 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
 import type { ProductDetailsData } from "@/lib/types/product";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export async function getProductBySlug(
   slug: string,
 ): Promise<ProductDetailsData | null> {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
 
   const { data, error } = await supabase
     .from("products")

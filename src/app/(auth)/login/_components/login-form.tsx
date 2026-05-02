@@ -2,7 +2,7 @@
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { AUTH_ROUTES } from "@/lib/constants/auth";
+import { AUTH_ROUTES } from "@/lib/constants/auth.constant";
 import { LoginFields, useLoginSchema } from "@/lib/schemas/auth/login.schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

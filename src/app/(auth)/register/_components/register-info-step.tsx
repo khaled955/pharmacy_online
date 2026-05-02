@@ -5,7 +5,7 @@ import { UseFormRegister, FieldErrors } from "react-hook-form";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AUTH_ROUTES } from "@/lib/constants/auth";
+import { AUTH_ROUTES } from "@/lib/constants/auth.constant";
 import { RegisterFormValues } from "@/lib/schemas/auth/register.schema";
 import AvatarUpload from "./avatar-upload";
 
@@ -13,7 +13,7 @@ interface RegisterInfoStepProps {
   formRegister: UseFormRegister<RegisterFormValues>;
   errors: FieldErrors<RegisterFormValues>;
   isLoading: boolean;
-  serverError: string | null;
+  serverError: string | undefined;
   avatarPreview: string | null;
   onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onAvatarRemove: () => void;

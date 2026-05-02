@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PASSWORD_CONFIG } from "@/lib/constants/auth";
+import { PASSWORD_CONFIG } from "@/lib/constants/auth.constant";
 
 export const changePasswordSchema = z
   .object({

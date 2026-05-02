@@ -4,23 +4,22 @@
 // Keep each hook small and single-purpose; the page composes them together.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useMutation } from "@tanstack/react-query"
-import { sendForgotPasswordOtpAction } from "@/lib/auth/send-forgot-password-otp.action"
-import { verifyForgotPasswordOtpAction } from "@/lib/auth/verify-forgot-password-otp.action"
-import { resetPasswordAction } from "@/lib/auth/reset-password.action"
-import { MUTATION_KEYS } from "@/lib/constants/auth"
+import { useMutation } from "@tanstack/react-query";
+import { sendForgotPasswordOtpAction } from "@/lib/auth/send-forgot-password-otp.action";
+import { verifyForgotPasswordOtpAction } from "@/lib/auth/verify-forgot-password-otp.action";
+import { resetPasswordAction } from "@/lib/auth/reset-password.action";
 import type {
   ForgotPasswordEmailInput,
   ForgotPasswordOtpInput,
   ForgotPasswordNewPasswordInput,
-} from "@/lib/schemas/auth/forgot-password.schema"
+} from "@/lib/schemas/auth/forgot-password.schema";
 import type {
   AuthResponse,
   SendOtpResponseData,
   VerifyOtpResponseData,
   ResetPasswordResponseData,
   ErrorResponse,
-} from "@/lib/types/auth"
+} from "@/lib/types/auth";
 
 // ── Step 1: send OTP to the provided email ────────────────────────────────────
 export function useSendForgotPasswordOtp() {
@@ -29,9 +28,8 @@ export function useSendForgotPasswordOtp() {
     ErrorResponse,
     ForgotPasswordEmailInput
   >({
-    mutationKey: MUTATION_KEYS.SEND_OTP,
     mutationFn: (input) => sendForgotPasswordOtpAction(input),
-  })
+  });
 }
 
 // ── Step 2: verify the OTP entered by the user ────────────────────────────────
@@ -42,10 +40,9 @@ export function useVerifyForgotPasswordOtp() {
     ErrorResponse,
     { email: string; input: ForgotPasswordOtpInput }
   >({
-    mutationKey: MUTATION_KEYS.VERIFY_OTP,
     mutationFn: ({ email, input }) =>
       verifyForgotPasswordOtpAction(email, input),
-  })
+  });
 }
 
 // ── Step 3: update the password using the server-side cookie ──────────────────
@@ -55,7 +52,6 @@ export function useResetPassword() {
     ErrorResponse,
     ForgotPasswordNewPasswordInput
   >({
-    mutationKey: MUTATION_KEYS.RESET_PASSWORD,
     mutationFn: (input) => resetPasswordAction(input),
-  })
+  });
 }

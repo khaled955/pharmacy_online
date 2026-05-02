@@ -1,26 +1,24 @@
-
-
-import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import {
   AUTH_COOKIES,
   OTP_TYPES,
   RESET_COOKIE_EXPIRY_MINUTES,
-} from "@/lib/constants/auth"
+} from "@/lib/constants/auth.constant";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
+);
 
 export async function POST(request: Request) {
-  const locale = request.headers.get("Accept-Language") || "en"
+  const locale = request.headers.get("Accept-Language") || "en";
 
   try {
-    const body = await request.json()
-    const email: string | undefined = body.email
-    const otp: string | undefined = body.otp
-    const type: string = body.type ?? OTP_TYPES.FORGOT_PASSWORD
+    const body = await request.json();
+    const email: string | undefined = body.email;
+    const otp: string | undefined = body.otp;
+    const type: string = body.type ?? OTP_TYPES.FORGOT_PASSWORD;
 
     if (!email || !otp) {
       return NextResponse.json({
@@ -30,7 +28,7 @@ export async function POST(request: Request) {
             ? "البريد الإلكتروني والرمز مطلوبان"
             : "Email and OTP are required",
         data: null,
-      })
+      });
     }
 
     // ── Look up the matching, unused OTP record ───────────────────────────
@@ -40,14 +38,14 @@ export async function POST(request: Request) {
       .eq("email", email)
       .eq("otp", otp)
       .eq("used", false)
-      .single()
+      .single();
 
     if (error || !otpRecord) {
       return NextResponse.json({
         status: false,
         message: locale === "ar" ? "رمز التحقق غير صحيح" : "Invalid OTP",
         data: null,
-      })
+      });
     }
 
     // ── Reject expired OTPs ───────────────────────────────────────────────
@@ -59,18 +57,18 @@ export async function POST(request: Request) {
             ? "انتهت صلاحية الرمز، اطلب رمزاً جديداً"
             : "OTP has expired, please request a new one",
         data: null,
-      })
+      });
     }
 
     // ── Mark OTP as used so it cannot be replayed ─────────────────────────
     await supabase
       .from("password_reset_otps")
       .update({ used: true })
-      .eq("id", otpRecord.id)
+      .eq("id", otpRecord.id);
 
     // ── register flow: create the Auth user + profile now ─────────────────
     if (type === OTP_TYPES.REGISTER) {
-      const { first_name, last_name, phone, password, avatar_url } = body
+      const { first_name, last_name, phone, password, avatar_url } = body;
 
       if (!first_name || !last_name || !password) {
         return NextResponse.json({
@@ -80,7 +78,7 @@ export async function POST(request: Request) {
               ? "بيانات التسجيل ناقصة"
               : "Missing registration data",
           data: null,
-        })
+        });
       }
 
       const { data: userData, error: createError } =
@@ -94,12 +92,12 @@ export async function POST(request: Request) {
             avatar_url: avatar_url ?? null,
           },
           email_confirm: true,
-        })
+        });
 
       if (createError) {
         const isExisting =
           createError.message.toLowerCase().includes("already registered") ||
-          createError.message.toLowerCase().includes("already exists")
+          createError.message.toLowerCase().includes("already exists");
 
         return NextResponse.json({
           status: false,
@@ -109,7 +107,7 @@ export async function POST(request: Request) {
               : "Email already registered"
             : createError.message,
           data: null,
-        })
+        });
       }
 
       const { error: profileError } = await supabase.from("profiles").upsert({
@@ -120,12 +118,12 @@ export async function POST(request: Request) {
         phone: phone ?? null,
         avatar_url: avatar_url ?? null,
         role: "customer",
-      })
+      });
 
       if (profileError) {
         // Roll back the Auth user so we don't leave orphaned records
-        await supabase.auth.admin.deleteUser(userData.user.id)
-        throw new Error(profileError.message)
+        await supabase.auth.admin.deleteUser(userData.user.id);
+        throw new Error(profileError.message);
       }
 
       return NextResponse.json({
@@ -135,7 +133,7 @@ export async function POST(request: Request) {
             ? "تم إنشاء الحساب وتأكيد بريدك الإلكتروني"
             : "Account created and email verified",
         data: { email },
-      })
+      });
     }
 
     // ── forgot_password flow: set short-lived cookie ──────────────────────
@@ -144,7 +142,7 @@ export async function POST(request: Request) {
       message:
         locale === "ar" ? "تم التحقق بنجاح" : "Email verified successfully",
       data: { email },
-    })
+    });
 
     if (type === OTP_TYPES.FORGOT_PASSWORD) {
       response.cookies.set(AUTH_COOKIES.PW_RESET_VERIFIED, email, {
@@ -153,15 +151,15 @@ export async function POST(request: Request) {
         sameSite: "lax",
         maxAge: RESET_COOKIE_EXPIRY_MINUTES * 60,
         path: "/",
-      })
+      });
     }
 
-    return response
+    return response;
   } catch (err: unknown) {
     return NextResponse.json({
       status: false,
       message: err instanceof Error ? err.message : "Verification failed",
       data: null,
-    })
+    });
   }
 }

@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Heart, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export const metadata = { title: "Wishlist | MedBox Dashboard" };
 
 export default async function DashboardWishlistPage() {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
   const { data: { user } } = await supabase.auth.getUser();
 
   let count = 0;

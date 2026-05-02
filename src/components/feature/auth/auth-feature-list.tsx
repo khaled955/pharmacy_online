@@ -1,4 +1,4 @@
-import { AUTH_FEATURES } from "@/lib/constants/auth";
+import { AUTH_FEATURES } from "@/lib/constants/auth.constant";
 
 export default function AuthFeatureList() {
   return (

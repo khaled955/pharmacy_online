@@ -1,8 +1,8 @@
-import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth"
-import type { ForgotPasswordOtpInput } from "@/lib/schemas/auth/forgot-password.schema"
-import type { AuthResponse, VerifyOtpResponseData } from "@/lib/types/auth"
+import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth.constant";
+import type { ForgotPasswordOtpInput } from "@/lib/schemas/auth/forgot-password.schema";
+import type { AuthResponse, VerifyOtpResponseData } from "@/lib/types/auth";
 
-// ── FORGOT PASSWORD — VERIFY OTP 
+// ── FORGOT PASSWORD — VERIFY OTP
 export async function verifyForgotPasswordOtpAction(
   email: string,
   input: ForgotPasswordOtpInput,
@@ -16,14 +16,14 @@ export async function verifyForgotPasswordOtpAction(
         otp: input.otp,
         type: OTP_TYPES.FORGOT_PASSWORD,
       }),
-    })
+    });
 
-    return res.json()
+    return res.json();
   } catch (err: unknown) {
     return {
       status: false,
       message: err instanceof Error ? err.message : "Verification failed",
       data: null,
-    }
+    };
   }
 }

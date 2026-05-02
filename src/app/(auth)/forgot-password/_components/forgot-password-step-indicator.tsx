@@ -1,4 +1,7 @@
-import { FORGOT_PASSWORD_STEPS, type ForgotPasswordStep } from "@/lib/constants/auth";
+import {
+  FORGOT_PASSWORD_STEPS,
+} from "@/lib/constants/auth.constant";
+import { ForgotPasswordStep } from "@/lib/types/auth";
 
 const STEP_ORDER: ForgotPasswordStep[] = [
   FORGOT_PASSWORD_STEPS.EMAIL,

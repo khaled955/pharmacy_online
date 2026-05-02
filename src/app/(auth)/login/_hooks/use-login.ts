@@ -1,5 +1,5 @@
 "use client";
-import { AUTH_REDIRECT_DURATION } from "@/lib/constants/auth";
+import { AUTH_REDIRECT_DURATION } from "@/lib/constants/auth.constant";
 import { LoginFields } from "@/lib/schemas/auth/login.schema";
 import { useMutation } from "@tanstack/react-query";
 import { signIn } from "next-auth/react";

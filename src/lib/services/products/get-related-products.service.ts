@@ -1,11 +1,11 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
 import type { ProductCardData } from "@/lib/types/product";
 import {
   PRODUCT_CARD_SELECT,
   mapProductCardRow,
   throwOnDbError,
 } from "./_product-helpers";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export async function getRelatedProducts(opts: {
   productId: string;
@@ -15,7 +15,7 @@ export async function getRelatedProducts(opts: {
   limit?: number;
 }): Promise<ProductCardData[]> {
   const { productId, categoryId, brand, seasonalTag, limit = 4 } = opts;
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
 
   // Priority 1: same category
   if (categoryId) {

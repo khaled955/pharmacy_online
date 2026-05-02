@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { FIRST_LAST_NAME_PATTERN, SAUDI_PHONE_PATTERN } from "@/lib/constants/auth";
+import {
+  FIRST_LAST_NAME_PATTERN,
+  SAUDI_PHONE_PATTERN,
+} from "@/lib/constants/auth.constant";
 
 export const updateProfileSchema = z.object({
   first_name: z

@@ -1,15 +1,14 @@
 "use server";
-import { OTP_TYPES } from "@/lib/constants/auth";
-import type { AuthResponse, RegisterResponseData } from "@/lib/types/auth";
+import { OTP_TYPES } from "@/lib/constants/auth.constant";
 import { sendOtpService } from "./send-otp.service";
 import { RegisterFormValues } from "../schemas/auth/register.schema";
-import { createClient } from "../supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { createClientFromServer } from "../supabase/server";
 
 export async function registerAction(
   input: RegisterFormValues,
-): Promise<AuthResponse<RegisterResponseData>> {
-  const supabase = await createClient();
+) {
+  const supabase = await createClientFromServer();
 
   try {
     // Upload avatar to Supabase Storage when a file was selected

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck, LayoutDashboard } from "lucide-react";
 import { fetchUserProfileService } from "@/lib/services/user/fetch-user-profile.service";
-import { AUTH_ROUTES } from "@/lib/constants/auth";
+import { AUTH_ROUTES } from "@/lib/constants/auth.constant";
 import LogoutButton from "./logout-button";
 import ThemeToggle from "./theme-toggle";
 import Greeting from "./greeting";
@@ -12,11 +12,11 @@ import { WishlistBadge } from "@/components/shop/wishlist-badge";
 import { NavbarDesktopSearch, NavbarMobileSearch } from "./navbar-search";
 
 const navLinks = [
-  { label: "Home",         href: "/" },
-  { label: "Medicine",     href: "/products?category=medicines" },
-  { label: "Categories",   href: "/products" },
+  { label: "Home", href: "/" },
+  { label: "Medicine", href: "/products?category=medicines" },
+  { label: "Categories", href: "/products" },
   { label: "Best Sellers", href: "/products?sort=best-sellers" },
-  { label: "Offers",       href: "/products?offers=true" },
+  { label: "Offers", href: "/products?offers=true" },
 ];
 
 export default async function HomeNavbar() {
@@ -34,7 +34,6 @@ export default async function HomeNavbar() {
       {/* ── Top bar ── */}
       <div className="section-container">
         <div className="flex h-16 items-center justify-between gap-4">
-
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <div
@@ -76,7 +75,11 @@ export default async function HomeNavbar() {
                 <Greeting firstName={profile.first_name} />
                 <Link
                   href={profile.role === "admin" ? "/dashboard" : "/profile"}
-                  aria-label={profile.role === "admin" ? "Go to dashboard" : "Go to profile"}
+                  aria-label={
+                    profile.role === "admin"
+                      ? "Go to dashboard"
+                      : "Go to profile"
+                  }
                   className={cn(
                     "rounded-xl transition-all duration-200",
                     "hover:ring-2 hover:ring-primary/30 hover:ring-offset-1",

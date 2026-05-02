@@ -2,13 +2,13 @@ import { MapPin, Home, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/server";
 import { getAddresses } from "@/lib/services/addresses/get-addresses.service";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export const metadata = { title: "Addresses | MedBox Dashboard" };
 
 export default async function DashboardAddressesPage() {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
   const { data: { user } } = await supabase.auth.getUser();
 
   const addresses = user?.id ? await getAddresses(user.id) : [];

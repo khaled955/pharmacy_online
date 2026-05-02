@@ -24,31 +24,32 @@ import {
   OTP_EMAIL_KEY,
   OTP_TYPES,
   COOL_DOWN_TIME,
-  type ForgotPasswordStep,
-} from "@/lib/constants/auth";
+} from "@/lib/constants/auth.constant";
 import { sendOtpAction } from "@/lib/auth/send-otp.action";
 import { useLocalStorage } from "@/hooks/shared/use-local-storage";
 import ForgotPasswordStepIndicator from "./forgot-password-step-indicator";
 import ForgotPasswordEmailStep from "./forgot-password-email-step";
 import ForgotPasswordOtpStep from "./forgot-password-otp-step";
 import ForgotPasswordNewPasswordStep from "./forgot-password-new-password-step";
+import { ForgotPasswordStep } from "@/lib/types/auth";
 
 // ── Step meta — subtitle for OTP step includes the email so it's computed at render time
 function getStepMeta(step: ForgotPasswordStep, email: string) {
-  const meta: Record<ForgotPasswordStep, { title: string; subtitle: string }> = {
-    [FORGOT_PASSWORD_STEPS.EMAIL]: {
-      title: "Forgot your password?",
-      subtitle: "Enter your email and we'll send you a verification code",
-    },
-    [FORGOT_PASSWORD_STEPS.OTP]: {
-      title: "Check your email",
-      subtitle: `We sent a ${OTP_CONFIG.LENGTH}-digit code to ${email}`,
-    },
-    [FORGOT_PASSWORD_STEPS.NEW_PASSWORD]: {
-      title: "Set new password",
-      subtitle: "Choose a strong password for your account",
-    },
-  };
+  const meta: Record<ForgotPasswordStep, { title: string; subtitle: string }> =
+    {
+      [FORGOT_PASSWORD_STEPS.EMAIL]: {
+        title: "Forgot your password?",
+        subtitle: "Enter your email and we'll send you a verification code",
+      },
+      [FORGOT_PASSWORD_STEPS.OTP]: {
+        title: "Check your email",
+        subtitle: `We sent a ${OTP_CONFIG.LENGTH}-digit code to ${email}`,
+      },
+      [FORGOT_PASSWORD_STEPS.NEW_PASSWORD]: {
+        title: "Set new password",
+        subtitle: "Choose a strong password for your account",
+      },
+    };
   return meta[step];
 }
 
@@ -57,7 +58,9 @@ export default function ForgotPasswordForm() {
   const router = useRouter();
 
   // ── Shared state ──────────────────────────────────────────────────────────
-  const [step, setStep] = useState<ForgotPasswordStep>(FORGOT_PASSWORD_STEPS.EMAIL);
+  const [step, setStep] = useState<ForgotPasswordStep>(
+    FORGOT_PASSWORD_STEPS.EMAIL,
+  );
   const [email, setEmail] = useState("");
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
@@ -154,7 +157,10 @@ export default function ForgotPasswordForm() {
   async function handleResendOtp() {
     setIsResending(true);
     try {
-      const res = await sendOtpAction({ email, type: OTP_TYPES.FORGOT_PASSWORD });
+      const res = await sendOtpAction({
+        email,
+        type: OTP_TYPES.FORGOT_PASSWORD,
+      });
       if (res.status) {
         const expireTime = new Date(Date.now() + COOL_DOWN_TIME);
         setCooldown(expireTime.toISOString());
@@ -167,7 +173,9 @@ export default function ForgotPasswordForm() {
   }
 
   // ── Step 3 submit: reset password ─────────────────────────────────────────
-  const onPasswordSubmit: SubmitHandler<ForgotPasswordNewPasswordInput> = (values) => {
+  const onPasswordSubmit: SubmitHandler<ForgotPasswordNewPasswordInput> = (
+    values,
+  ) => {
     resetPassword.mutate(values, {
       onSuccess: (data) => {
         if (!data.status) return;
@@ -192,8 +200,12 @@ export default function ForgotPasswordForm() {
         >
           <ShieldCheck className="h-8 w-8 text-white" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {title}
+        </h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          {subtitle}
+        </p>
       </div>
 
       {/* ── Card ── */}
@@ -208,7 +220,9 @@ export default function ForgotPasswordForm() {
             onSubmit={onEmailSubmit}
             isPending={sendOtp.isPending}
             errorMessage={
-              sendOtp.data && !sendOtp.data.status ? sendOtp.data.message : undefined
+              sendOtp.data && !sendOtp.data.status
+                ? sendOtp.data.message
+                : undefined
             }
           />
         )}
@@ -220,7 +234,9 @@ export default function ForgotPasswordForm() {
             isResending={isResending}
             isPending={verifyOtp.isPending}
             errorMessage={
-              verifyOtp.data && !verifyOtp.data.status ? verifyOtp.data.message : undefined
+              verifyOtp.data && !verifyOtp.data.status
+                ? verifyOtp.data.message
+                : undefined
             }
             onSubmit={onOtpSubmit}
             onResend={handleResendOtp}

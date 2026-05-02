@@ -1,5 +1,5 @@
+import { createClientFromServer } from "@/lib/supabase/server";
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
 
 export type DashboardStats = {
   totalOrders: number;
@@ -11,7 +11,7 @@ export type DashboardStats = {
 const ACTIVE_STATUSES = ["pending", "confirmed"] as const;
 
 export async function getDashboardStats(userId: string): Promise<DashboardStats> {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
 
   const [totalRes, activeRes, wishlistRes] = await Promise.all([
     supabase

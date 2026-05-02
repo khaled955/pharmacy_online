@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { AUTH_API, AUTH_ROUTES, FORGOT_PASSWORD_STEPS, OTP_TYPES, REGISTER_STEPS } from "../constants/auth.constant";
 
 export type UserRole = "customer" | "admin";
 
@@ -60,3 +61,10 @@ export type AuthFeature = {
   title: string;
   desc: string;
 };
+
+export type AuthRoute = (typeof AUTH_ROUTES)[keyof typeof AUTH_ROUTES];
+export type AuthApiEndpoint = (typeof AUTH_API)[keyof typeof AUTH_API];
+export type OtpType = (typeof OTP_TYPES)[keyof typeof OTP_TYPES];
+export type RegisterStep = (typeof REGISTER_STEPS)[keyof typeof REGISTER_STEPS];
+export type ForgotPasswordStep =
+  (typeof FORGOT_PASSWORD_STEPS)[keyof typeof FORGOT_PASSWORD_STEPS];

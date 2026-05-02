@@ -1,16 +1,16 @@
-import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth"
-import type { AuthResponse, VerifyOtpResponseData } from "@/lib/types/auth"
+import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth.constant";
+import type { AuthResponse, VerifyOtpResponseData } from "@/lib/types/auth";
 
-//VERIFY OTP (register) 
+//VERIFY OTP (register)
 export async function verifyRegisterOtpAction(
   email: string,
   otp: string,
   pendingUser: {
-    first_name: string
-    last_name: string
-    phone?: string | null
-    password: string
-    avatar_url: string | null
+    first_name: string;
+    last_name: string;
+    phone?: string | null;
+    password: string;
+    avatar_url: string | null;
   },
 ): Promise<AuthResponse<VerifyOtpResponseData>> {
   try {
@@ -27,14 +27,14 @@ export async function verifyRegisterOtpAction(
         password: pendingUser.password,
         avatar_url: pendingUser.avatar_url,
       }),
-    })
+    });
 
-    return res.json()
+    return res.json();
   } catch (err: unknown) {
     return {
       status: false,
       message: err instanceof Error ? err.message : "Verification failed",
       data: null,
-    }
+    };
   }
 }

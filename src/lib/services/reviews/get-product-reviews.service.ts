@@ -1,12 +1,12 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
 import type { ReviewRow } from "@/lib/types/product";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export async function getProductReviews(
   productId: string,
   limit = 10,
 ): Promise<ReviewRow[]> {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
 
   const { data, error } = await supabase
     .from("reviews")

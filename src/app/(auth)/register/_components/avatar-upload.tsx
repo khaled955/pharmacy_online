@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import Image from "next/image";
 import { LoaderCircle, Trash2, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
+import { useRef } from "react";
 
 type AvatarUploadProps = {
   preview: string | null;
@@ -31,7 +31,7 @@ export default function AvatarUpload({
   helperText = "Upload a clear profile picture",
 }: AvatarUploadProps) {
   // Ref
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   // Variables
   const hasPreview = Boolean(preview);
   const safeProgress = Math.max(0, Math.min(100, uploadProgress));
@@ -64,7 +64,7 @@ export default function AvatarUpload({
         <label
           htmlFor={inputId}
           className={cn(
-            "group relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed transition-all",
+            "group relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 transition-all",
             "focus-within:ring-2 focus-within:ring-teal-500/30",
             hasPreview
               ? "border-teal-400 bg-white dark:bg-gray-900"
@@ -109,12 +109,12 @@ export default function AvatarUpload({
             <div className="flex flex-col items-center gap-1">
               {isUploading ? (
                 <>
-                  <LoaderCircle className="h-5 w-5 animate-spin text-teal-500" />
+                  <LoaderCircle className="size-5 animate-spin text-teal-500" />
                   <span className="text-xs text-teal-500">{safeProgress}%</span>
                 </>
               ) : (
                 <>
-                  <Upload className="h-5 w-5 text-gray-400 group-hover:text-teal-500" />
+                  <Upload className="size-5 text-gray-400 group-hover:text-teal-500" />
                   <span className="text-xs text-gray-400 group-hover:text-teal-500">
                     Photo
                   </span>
@@ -141,16 +141,16 @@ export default function AvatarUpload({
             onClick={handleRemove}
             disabled={disabled || isUploading}
             className={cn(
-              "absolute -right-1 -top-1 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-white shadow-sm transition",
+              "absolute -inset-e-1 -top-1 inline-flex size-8 items-center justify-center rounded-full border bg-white shadow-sm transition",
               "border-gray-200 text-gray-600 hover:bg-red-50 hover:text-red-600",
               "dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-red-950 dark:hover:text-red-400",
               "disabled:pointer-events-none disabled:opacity-50",
             )}
           >
             {isUploading ? (
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             ) : (
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4 cursor-pointer" />
             )}
           </button>
         )}

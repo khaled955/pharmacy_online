@@ -8,9 +8,8 @@ export const AUTH_ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
 } as const;
 
-export type AuthRoute = (typeof AUTH_ROUTES)[keyof typeof AUTH_ROUTES];
 
-// Internal API endpoints
+// auth router end point
 export const AUTH_API = {
   LOGIN: "/api/auth/login",
   REGISTER: "/api/auth/register",
@@ -19,11 +18,10 @@ export const AUTH_API = {
   RESET_PASSWORD: "/api/auth/reset-password",
 } as const;
 
-export type AuthApiEndpoint = (typeof AUTH_API)[keyof typeof AUTH_API];
 
 // OTP configuration
 export const OTP_CONFIG = {
-  /** Digit length of every OTP generated in this app */
+  /*Digit length of every OTP  */
   LENGTH: 5,
   /** Minutes until OTP record expires in the DB */
   EXPIRY_MINUTES: 10,
@@ -40,9 +38,7 @@ export const OTP_TYPES = {
   FORGOT_PASSWORD: "forgot_password",
 } as const;
 
-export type OtpType = (typeof OTP_TYPES)[keyof typeof OTP_TYPES];
 
-// Multi-step form step names
 
 /** Steps for the register flow (form → otp) */
 export const REGISTER_STEPS = {
@@ -50,7 +46,6 @@ export const REGISTER_STEPS = {
   OTP: "otp",
 } as const;
 
-export type RegisterStep = (typeof REGISTER_STEPS)[keyof typeof REGISTER_STEPS];
 
 /** Steps for the forgot-password flow (email → otp → new_password) */
 export const FORGOT_PASSWORD_STEPS = {
@@ -59,8 +54,6 @@ export const FORGOT_PASSWORD_STEPS = {
   NEW_PASSWORD: "new_password",
 } as const;
 
-export type ForgotPasswordStep =
-  (typeof FORGOT_PASSWORD_STEPS)[keyof typeof FORGOT_PASSWORD_STEPS];
 
 //Cookie names
 export const AUTH_COOKIES = {
@@ -87,15 +80,6 @@ export const OTP_EMAIL_KEY = "otp_email";
 /** Cooldown duration in milliseconds before the user can resend */
 export const COOL_DOWN_TIME = 60 * 1000; // 60 s
 
-//TanStack Query mutation keys
-export const MUTATION_KEYS = {
-  LOGIN: ["auth", "login"] as const,
-  REGISTER: ["auth", "register"] as const,
-  SEND_OTP: ["auth", "send-otp"] as const,
-  VERIFY_OTP: ["auth", "verify-otp"] as const,
-  RESET_PASSWORD: ["auth", "reset-password"] as const,
-  RESEND_OTP: ["auth", "resend-otp"] as const,
-} as const;
 
 export const PASSWORD_PATTERN =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;

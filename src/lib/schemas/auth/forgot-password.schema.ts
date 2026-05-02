@@ -1,11 +1,16 @@
 import { z } from "zod";
-import { OTP_CONFIG, OTP_PATTERN, PASSWORD_CONFIG } from "@/lib/constants/auth";
+import {
+  OTP_CONFIG,
+  OTP_PATTERN,
+  PASSWORD_CONFIG,
+} from "@/lib/constants/auth.constant";
 
 // ── Step 1: Enter email
 export function useForgotPasswordEmailSchema() {
   return z.object({
     email: z.email({
-      error: (issue) => (!issue ? "Invalid email address" : "Email is required"),
+      error: (issue) =>
+        !issue ? "Invalid email address" : "Email is required",
     }),
   });
 }
@@ -37,7 +42,8 @@ export function useForgotPasswordNewPasswordSchema() {
   return z
     .object({
       password: z
-        .string().nonempty("Password is required")
+        .string()
+        .nonempty("Password is required")
         .min(
           PASSWORD_CONFIG.MIN_LENGTH,
           `Password must be at least ${PASSWORD_CONFIG.MIN_LENGTH} characters`,

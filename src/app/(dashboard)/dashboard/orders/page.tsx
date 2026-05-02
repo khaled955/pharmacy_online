@@ -3,9 +3,9 @@ import { Clock, Package, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/server";
 import { getOrders } from "@/lib/services/orders/get-orders.service";
 import type { OrderStatus } from "@/lib/types/order";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export const metadata = { title: "Orders | MedBox Dashboard" };
 
@@ -25,7 +25,7 @@ const STATUS_MAP: Record<OrderStatus, StatusMapValue> = {
 };
 
 export default async function DashboardOrdersPage() {
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();

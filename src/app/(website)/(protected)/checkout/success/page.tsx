@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
 import { getOrderById } from "@/lib/services/orders/get-orders.service";
 import { OrderSuccessMessage } from "@/components/checkout/order-success-message";
 import { buildAdminWhatsAppUrl } from "@/lib/notifications/order-messages";
 import { WhatsAppAutoOpen } from "@/components/checkout/whatsapp-auto-open";
+import { createClientFromServer } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Order Placed!" };
 
@@ -16,7 +16,7 @@ export default async function CheckoutSuccessPage({
   const { orderId } = await searchParams;
   if (!orderId) redirect("/");
 
-  const supabase = await createClient();
+  const supabase = await createClientFromServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();

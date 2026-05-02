@@ -1,4 +1,7 @@
-import { REGISTER_STEPS, type RegisterStep } from "@/lib/constants/auth";
+import {
+  REGISTER_STEPS,
+} from "@/lib/constants/auth.constant";
+import { RegisterStep } from "@/lib/types/auth";
 
 interface RegisterStepIndicatorProps {
   step: RegisterStep;
@@ -10,7 +13,7 @@ export default function RegisterStepIndicator({
   return (
     <div className="mb-6 flex items-center justify-center gap-2">
       <span
-        className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold
+        className={`flex size-8 items-center justify-center rounded-full text-xs font-bold
           ${
             step === REGISTER_STEPS.FORM
               ? "bg-teal-600 text-white dark:bg-teal-700"
