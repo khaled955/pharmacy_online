@@ -19,7 +19,7 @@ export default function useRegisterSchema() {
         .regex(FIRST_LAST_NAME_PATTERN, "No spaces or special characters"),
       email: z.email({
         error: (issu) =>
-          !Boolean(issu) ? "Invalid email address" : "Email is required",
+          Boolean(issu.input) ? "Invalid email address" : "Email is required",
       }),
       phone: z
         .string()
