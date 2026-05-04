@@ -1,12 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
 import type { AuthResponse, SendOtpResponseData } from "@/lib/types/auth";
 import { OTP_TYPES } from "@/lib/constants/auth.constant";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+import { supabaseAdmin } from "../supabase/admin";
 
 function generateOTP(): string {
   return Math.floor(10000 + Math.random() * 90000).toString();
@@ -69,6 +64,7 @@ export async function sendOtpService(
   const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
   // Delete old unused OTPs for this email
+  const supabase = supabaseAdmin;
   await supabase
     .from("password_reset_otps")
     .delete()

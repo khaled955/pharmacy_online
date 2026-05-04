@@ -36,7 +36,7 @@ type PendingUser = {
   last_name: string;
   phone?: string | null;
   password: string;
-  avatar_url: string | null;
+  avatar: File | null;
 };
 
 export default function RegisterForm() {
@@ -114,7 +114,7 @@ export default function RegisterForm() {
           last_name: values.last_name,
           phone: values.phone ?? null,
           password: values.password,
-          avatar_url: payload.avatar_url ?? null,
+          avatar: values.avatar ?? null,
         });
 
         toast.success("OTP sent to your email");

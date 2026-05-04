@@ -15,7 +15,7 @@ type PendingUser = {
   last_name: string;
   phone?: string | null;
   password: string;
-  avatar_url: string | null;
+  avatar: File | null;
 };
 
 type RegisterVerifyOtp = {

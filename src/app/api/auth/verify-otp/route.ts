@@ -5,6 +5,7 @@ import {
   OTP_TYPES,
   RESET_COOKIE_EXPIRY_MINUTES,
 } from "@/lib/constants/auth.constant";
+import { uploadAvatarService } from "@/lib/auth/upload-avatar.service";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,10 +16,23 @@ export async function POST(request: Request) {
   const locale = request.headers.get("Accept-Language") || "en";
 
   try {
-    const body = await request.json();
-    const email: string | undefined = body.email;
-    const otp: string | undefined = body.otp;
-    const type: string = body.type ?? OTP_TYPES.FORGOT_PASSWORD;
+  
+const formData = await request.formData();
+
+const email = formData.get("email")?.toString();
+const otp = formData.get("otp")?.toString();
+const type = formData.get("type")?.toString() ?? OTP_TYPES.FORGOT_PASSWORD;
+
+const first_name = formData.get("first_name")?.toString();
+const last_name = formData.get("last_name")?.toString();
+const phone = formData.get("phone")?.toString() || null;
+const password = formData.get("password")?.toString();
+
+const avatarValue = formData.get("avatar");
+const avatar = avatarValue instanceof File ? avatarValue : null;
+
+
+
 
     if (!email || !otp) {
       return NextResponse.json({
@@ -68,7 +82,16 @@ export async function POST(request: Request) {
 
     // ── register flow: create the Auth user + profile now ─────────────────
     if (type === OTP_TYPES.REGISTER) {
-      const { first_name, last_name, phone, password, avatar_url } = body;
+      // const { first_name, last_name, phone, password, avatar_url } = body;
+
+let avatar_url: string | null = null;
+
+if (avatar) {
+  const uploadedAvatar = await uploadAvatarService(avatar);
+  avatar_url = uploadedAvatar.publicUrl;
+}
+
+
 
       if (!first_name || !last_name || !password) {
         return NextResponse.json({

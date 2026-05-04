@@ -1,24 +1,14 @@
+
 "use server";
 
 import { OTP_TYPES } from "@/lib/constants/auth.constant";
 import { sendOtpService } from "./send-otp.service";
 import type { RegisterFormValues } from "../schemas/auth/register.schema";
-import { createClientFromServer } from "../supabase/server";
 import { supabaseAdmin } from "../supabase/admin";
 
-const AVATAR_BUCKET = "product-images";
-const AVATAR_FOLDER = "avatars";
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
-const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
 export async function registerAction(input: RegisterFormValues) {
-  // Variables
-  const supabase = await createClientFromServer();
-  let avatar_url: string | null = null;
-  let uploadedAvatarPath: string | null = null;
-
   try {
-    // Check email availability before uploading avatar
+    // Check email availability before sending OTP
     const { data, error } = await supabaseAdmin.auth.admin.listUsers();
 
     if (error) {
@@ -37,41 +27,7 @@ export async function registerAction(input: RegisterFormValues) {
       };
     }
 
-    // Upload avatar to Supabase Storage when a file was selected
-    if (input.avatar) {
-      // validation for photo types
-      if (!ALLOWED_AVATAR_TYPES.includes(input.avatar.type)) {
-        throw new Error("Avatar must be JPG, PNG, or WEBP");
-      }
-      // validation for photo size
-      if (input.avatar.size > MAX_AVATAR_SIZE) {
-        throw new Error("Avatar size must be less than 2MB");
-      }
-
-      const fileExt = input.avatar.name.split(".").pop() ?? "webp";
-      const fileName = `${AVATAR_FOLDER}/${crypto.randomUUID()}.${fileExt}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from(AVATAR_BUCKET)
-        .upload(fileName, input.avatar, {
-          cacheControl: "3600", // 1 hour
-          upsert: false, // dont replace with other file if has same name will give error
-        });
-
-      if (uploadError) {
-        throw new Error(uploadError.message);
-      }
-
-      uploadedAvatarPath = uploadData.path;
-
-      const { data: urlData } = supabase.storage
-        .from(AVATAR_BUCKET)
-        .getPublicUrl(uploadData.path);
-
-      avatar_url = urlData.publicUrl;
-    }
-
-    // Send verification OTP to the user's email
+    // Send verification OTP only
     const otpData = await sendOtpService(input.email, OTP_TYPES.REGISTER);
 
     if (!otpData.status) {
@@ -83,7 +39,6 @@ export async function registerAction(input: RegisterFormValues) {
       message: "OTP sent to your email",
       data: {
         email: input.email,
-        avatar_url,
         otp:
           process.env.NODE_ENV === "development"
             ? (otpData.data?.otp ?? null)
@@ -91,10 +46,6 @@ export async function registerAction(input: RegisterFormValues) {
       },
     };
   } catch (err: unknown) {
-    if (uploadedAvatarPath) {
-      await supabase.storage.from(AVATAR_BUCKET).remove([uploadedAvatarPath]);
-    }
-
     return {
       status: false,
       message: err instanceof Error ? err.message : "Registration failed",

@@ -1,7 +1,7 @@
 import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth.constant";
 import type { AuthResponse, VerifyOtpResponseData } from "@/lib/types/auth";
 
-//VERIFY OTP (register)
+// VERIFY OTP (register)
 export async function verifyRegisterOtpAction(
   email: string,
   otp: string,
@@ -10,23 +10,27 @@ export async function verifyRegisterOtpAction(
     last_name: string;
     phone?: string | null;
     password: string;
-    avatar_url: string | null;
+    avatar: File | null;
   },
 ): Promise<AuthResponse<VerifyOtpResponseData>> {
   try {
+    const formData = new FormData();
+
+    formData.append("email", email);
+    formData.append("otp", otp);
+    formData.append("type", OTP_TYPES.REGISTER);
+    formData.append("first_name", pendingUser.first_name);
+    formData.append("last_name", pendingUser.last_name);
+    formData.append("phone", pendingUser.phone ?? "");
+    formData.append("password", pendingUser.password);
+
+    if (pendingUser.avatar) {
+      formData.append("avatar", pendingUser.avatar);
+    }
+
     const res = await fetch(AUTH_API.VERIFY_OTP, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        otp,
-        type: OTP_TYPES.REGISTER,
-        first_name: pendingUser.first_name,
-        last_name: pendingUser.last_name,
-        phone: pendingUser.phone ?? null,
-        password: pendingUser.password,
-        avatar_url: pendingUser.avatar_url,
-      }),
+      body: formData,
     });
 
     return res.json();

@@ -41,7 +41,6 @@ export type AuthResponse<T = null> = SuccessResponse<T> | ErrorResponse;
 
 export type RegisterResponseData = {
   email: string;
-  avatar_url: string | null;
   otp?: string | null;
 };
 
@@ -68,3 +67,16 @@ export type OtpType = (typeof OTP_TYPES)[keyof typeof OTP_TYPES];
 export type RegisterStep = (typeof REGISTER_STEPS)[keyof typeof REGISTER_STEPS];
 export type ForgotPasswordStep =
   (typeof FORGOT_PASSWORD_STEPS)[keyof typeof FORGOT_PASSWORD_STEPS];
+
+
+
+ export type UploadData = {
+  path: string;
+  id: string;
+  fullPath: string;
+};
+
+ export type PublicUrlData = {
+  publicUrl: string;
+};
+
