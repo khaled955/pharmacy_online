@@ -1,38 +1,57 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import {
   AUTH_COOKIES,
   OTP_TYPES,
   RESET_COOKIE_EXPIRY_MINUTES,
 } from "@/lib/constants/auth.constant";
-import { uploadAvatarService } from "@/lib/auth/upload-avatar.service";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+import {
+  removeAvatarService,
+  uploadAvatarService,
+} from "@/lib/auth/upload-avatar.service";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
   const locale = request.headers.get("Accept-Language") || "en";
 
   try {
-  
-const formData = await request.formData();
+    const contentType = request.headers.get("content-type") || "";
 
-const email = formData.get("email")?.toString();
-const otp = formData.get("otp")?.toString();
-const type = formData.get("type")?.toString() ?? OTP_TYPES.FORGOT_PASSWORD;
+    let email: string | undefined;
+    let otp: string | undefined;
+    let type: string = OTP_TYPES.FORGOT_PASSWORD;
 
-const first_name = formData.get("first_name")?.toString();
-const last_name = formData.get("last_name")?.toString();
-const phone = formData.get("phone")?.toString() || null;
-const password = formData.get("password")?.toString();
+    let first_name: string | undefined;
+    let last_name: string | undefined;
+    let phone: string | null = null;
+    let password: string | undefined;
+    let avatar: File | null = null;
 
-const avatarValue = formData.get("avatar");
-const avatar = avatarValue instanceof File ? avatarValue : null;
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
 
+      email = formData.get("email")?.toString();
+      otp = formData.get("otp")?.toString();
+      type = formData.get("type")?.toString() ?? OTP_TYPES.FORGOT_PASSWORD;
 
+      first_name = formData.get("first_name")?.toString();
+      last_name = formData.get("last_name")?.toString();
+      phone = formData.get("phone")?.toString() || null;
+      password = formData.get("password")?.toString();
 
+      const avatarValue = formData.get("avatar");
+      avatar = avatarValue instanceof File ? avatarValue : null;
+    } else {
+      const body = await request.json();
+
+      email = body.email;
+      otp = body.otp;
+      type = body.type ?? OTP_TYPES.FORGOT_PASSWORD;
+
+      first_name = body.first_name;
+      last_name = body.last_name;
+      phone = body.phone ?? null;
+      password = body.password;
+    }
 
     if (!email || !otp) {
       return NextResponse.json({
@@ -45,11 +64,12 @@ const avatar = avatarValue instanceof File ? avatarValue : null;
       });
     }
 
-    // ── Look up the matching, unused OTP record ───────────────────────────
-    const { data: otpRecord, error } = await supabase
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const { data: otpRecord, error } = await supabaseAdmin
       .from("password_reset_otps")
       .select("*")
-      .eq("email", email)
+      .eq("email", normalizedEmail)
       .eq("otp", otp)
       .eq("used", false)
       .single();
@@ -62,7 +82,6 @@ const avatar = avatarValue instanceof File ? avatarValue : null;
       });
     }
 
-    // ── Reject expired OTPs ───────────────────────────────────────────────
     if (new Date(otpRecord.expires_at) < new Date()) {
       return NextResponse.json({
         status: false,
@@ -74,25 +93,12 @@ const avatar = avatarValue instanceof File ? avatarValue : null;
       });
     }
 
-    // ── Mark OTP as used so it cannot be replayed ─────────────────────────
-    await supabase
+    await supabaseAdmin
       .from("password_reset_otps")
       .update({ used: true })
       .eq("id", otpRecord.id);
 
-    // ── register flow: create the Auth user + profile now ─────────────────
     if (type === OTP_TYPES.REGISTER) {
-      // const { first_name, last_name, phone, password, avatar_url } = body;
-
-let avatar_url: string | null = null;
-
-if (avatar) {
-  const uploadedAvatar = await uploadAvatarService(avatar);
-  avatar_url = uploadedAvatar.publicUrl;
-}
-
-
-
       if (!first_name || !last_name || !password) {
         return NextResponse.json({
           status: false,
@@ -104,23 +110,37 @@ if (avatar) {
         });
       }
 
+      let avatar_url: string | null = null;
+      let uploadedAvatarPath: string | null = null;
+
+      if (avatar) {
+        const uploadedAvatar = await uploadAvatarService(avatar);
+
+        uploadedAvatarPath = uploadedAvatar.path;
+        avatar_url = uploadedAvatar.publicUrl;
+      }
+
       const { data: userData, error: createError } =
-        await supabase.auth.admin.createUser({
-          email,
+        await supabaseAdmin.auth.admin.createUser({
+          email: normalizedEmail,
           password,
           user_metadata: {
             first_name,
             last_name,
-            phone: phone ?? null,
-            avatar_url: avatar_url ?? null,
+            phone,
+            avatar_url,
           },
           email_confirm: true,
         });
 
-      if (createError) {
+      if (createError || !userData.user) {
+        if (uploadedAvatarPath) {
+          await removeAvatarService(uploadedAvatarPath);
+        }
+
         const isExisting =
-          createError.message.toLowerCase().includes("already registered") ||
-          createError.message.toLowerCase().includes("already exists");
+          createError?.message.toLowerCase().includes("already registered") ||
+          createError?.message.toLowerCase().includes("already exists");
 
         return NextResponse.json({
           status: false,
@@ -128,24 +148,31 @@ if (avatar) {
             ? locale === "ar"
               ? "البريد الإلكتروني مستخدم بالفعل"
               : "Email already registered"
-            : createError.message,
+            : createError?.message || "Failed to create user",
           data: null,
         });
       }
 
-      const { error: profileError } = await supabase.from("profiles").upsert({
-        id: userData.user.id,
-        full_name: `${first_name} ${last_name}`,
-        first_name,
-        last_name,
-        phone: phone ?? null,
-        avatar_url: avatar_url ?? null,
-        role: "customer",
-      });
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .upsert({
+          id: userData.user.id,
+          email: normalizedEmail,
+          full_name: `${first_name} ${last_name}`,
+          first_name,
+          last_name,
+          phone,
+          avatar_url,
+          role: "customer",
+        });
 
       if (profileError) {
-        // Roll back the Auth user so we don't leave orphaned records
-        await supabase.auth.admin.deleteUser(userData.user.id);
+        await supabaseAdmin.auth.admin.deleteUser(userData.user.id);
+
+        if (uploadedAvatarPath) {
+          await removeAvatarService(uploadedAvatarPath);
+        }
+
         throw new Error(profileError.message);
       }
 
@@ -155,20 +182,24 @@ if (avatar) {
           locale === "ar"
             ? "تم إنشاء الحساب وتأكيد بريدك الإلكتروني"
             : "Account created and email verified",
-        data: { email },
+        data: {
+          email: normalizedEmail,
+          avatar_url,
+        },
       });
     }
 
-    // ── forgot_password flow: set short-lived cookie ──────────────────────
     const response = NextResponse.json({
       status: true,
       message:
         locale === "ar" ? "تم التحقق بنجاح" : "Email verified successfully",
-      data: { email },
+      data: {
+        email: normalizedEmail,
+      },
     });
 
     if (type === OTP_TYPES.FORGOT_PASSWORD) {
-      response.cookies.set(AUTH_COOKIES.PW_RESET_VERIFIED, email, {
+      response.cookies.set(AUTH_COOKIES.PW_RESET_VERIFIED, normalizedEmail, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",

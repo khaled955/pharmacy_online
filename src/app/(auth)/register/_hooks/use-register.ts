@@ -1,3 +1,4 @@
+"use client";
 import { useMutation } from "@tanstack/react-query";
 import { registerAction } from "@/lib/auth/register.action";
 import { verifyRegisterOtpAction } from "@/lib/auth/verify-register-otp.action";
@@ -5,7 +6,6 @@ import { sendOtpAction } from "@/lib/auth/send-otp.action";
 import { OTP_TYPES } from "@/lib/constants/auth.constant";
 import type {
   AuthResponse,
-  VerifyOtpResponseData,
   SendOtpResponseData,
 } from "@/lib/types/auth";
 import { RegisterFormValues } from "@/lib/schemas/auth/register.schema";
@@ -30,22 +30,18 @@ export function useRegister() {
     mutate: onRegister,
     error: regiseterError,
     isPending: regiseterIsPending,
-    reset:registerReset,
+    reset: registerReset,
   } = useMutation({
     mutationFn: (formFields: RegisterFormValues) => registerAction(formFields),
   });
-  return { onRegister, regiseterError, regiseterIsPending,registerReset };
+  return { onRegister, regiseterError, regiseterIsPending, registerReset };
 }
 
 // ── Step 2a: verify the OTP — creates the Supabase user on success
 export function useVerifyRegisterOtp() {
-  return useMutation<
-    AuthResponse<VerifyOtpResponseData>,
-    Error,
-    RegisterVerifyOtp
-  >({
-    mutationFn: ({ email, otp, pending }) =>
-      verifyRegisterOtpAction(email, otp, pending),
+  return useMutation({
+    mutationFn: ({ email, otp, pending }:RegisterVerifyOtp) =>
+      verifyRegisterOtpAction({email,otp,pendingUser:pending}),
   });
 }
 

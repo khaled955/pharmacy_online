@@ -1,4 +1,3 @@
-
 "use server";
 
 import { OTP_TYPES } from "@/lib/constants/auth.constant";

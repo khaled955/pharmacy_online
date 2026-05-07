@@ -1,18 +1,23 @@
 import { AUTH_API, OTP_TYPES } from "@/lib/constants/auth.constant";
-import type { AuthResponse, VerifyOtpResponseData } from "@/lib/types/auth";
 
-// VERIFY OTP (register)
-export async function verifyRegisterOtpAction(
-  email: string,
-  otp: string,
+type VerifyOtpRegisterValues = {
+  email: string;
+  otp: string;
   pendingUser: {
     first_name: string;
     last_name: string;
     phone?: string | null;
     password: string;
     avatar: File | null;
-  },
-): Promise<AuthResponse<VerifyOtpResponseData>> {
+  };
+};
+
+// VERIFY OTP (register)
+export async function verifyRegisterOtpAction({
+  email,
+  otp,
+  pendingUser,
+}: VerifyOtpRegisterValues) {
   try {
     const formData = new FormData();
 

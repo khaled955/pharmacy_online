@@ -12,7 +12,9 @@ export async function sendOtpService(
   type: (typeof OTP_TYPES)[keyof typeof OTP_TYPES],
   locale: string = "en",
 ): Promise<AuthResponse<SendOtpResponseData>> {
-  if (!email) {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!normalizedEmail) {
     return {
       status: false,
       message:
@@ -21,34 +23,25 @@ export async function sendOtpService(
     };
   }
 
-  // For forgot-password OTPs, verify the account exists first.
-  if (type === OTP_TYPES.FORGOT_PASSWORD) {
-    const searchRes = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users?filter=${encodeURIComponent(email)}&per_page=1`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        },
-      },
-    );
+  const supabase = supabaseAdmin;
 
-    if (!searchRes.ok) {
+  // For forgot-password OTPs, verify the account exists first from profiles.email
+  if (type === OTP_TYPES.FORGOT_PASSWORD) {
+    const { data: existingProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+
+    if (profileError) {
       return {
         status: false,
-        message: "Failed to verify account",
+        message: profileError.message,
         data: null,
       };
     }
 
-    const { users } = (await searchRes.json()) as {
-      users?: { email?: string }[];
-    };
-    const userExists = (users ?? []).some(
-      (u) => u.email?.toLowerCase() === email.toLowerCase(),
-    );
-
-    if (!userExists) {
+    if (!existingProfile) {
       return {
         status: false,
         message:
@@ -64,17 +57,21 @@ export async function sendOtpService(
   const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
   // Delete old unused OTPs for this email
-  const supabase = supabaseAdmin;
   await supabase
     .from("password_reset_otps")
     .delete()
-    .eq("email", email)
+    .eq("email", normalizedEmail)
     .eq("used", false);
 
   // Insert new OTP
   const { error: insertError } = await supabase
     .from("password_reset_otps")
-    .insert({ email, otp, expires_at, used: false });
+    .insert({
+      email: normalizedEmail,
+      otp,
+      expires_at,
+      used: false,
+    });
 
   if (insertError) {
     return {
@@ -92,7 +89,10 @@ export async function sendOtpService(
         locale === "ar"
           ? "تم إنشاء رمز التحقق (وضع التطوير)"
           : "OTP generated (dev mode)",
-      data: { email, otp },
+      data: {
+        email: normalizedEmail,
+        otp,
+      },
     };
   }
 
@@ -120,30 +120,49 @@ export async function sendOtpService(
 
   const subject =
     locale === "ar" ? "رمز التحقق - الصيدلية" : "Your OTP Code - Pharmacy";
+
   const heading =
     locale === "ar" ? "مرحباً بك في صيدليتنا" : "Welcome to our Pharmacy";
+
   const bodyText =
     locale === "ar" ? "رمز التحقق الخاص بك:" : "Your verification code:";
+
   const expiryText =
     locale === "ar" ? "صالح لمدة 10 دقائق" : "Expires in 10 minutes";
 
-  await transporter.sendMail({
-    from: `Pharmacy <${gmailUser}>`,
-    to: email,
-    subject,
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:400px;margin:0 auto;padding:24px;">
-        <h2 style="color:#0d9488;">${heading}</h2>
-        <p>${bodyText}</p>
-        <div style="background:#f0fdfa;border:2px solid #0d9488;border-radius:12px;padding:24px;text-align:center;margin:24px 0;">
-          <span style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#0d9488;">
-            ${otp}
-          </span>
+  try {
+    await transporter.sendMail({
+      from: `Pharmacy <${gmailUser}>`,
+      to: normalizedEmail,
+      subject,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:400px;margin:0 auto;padding:24px;">
+          <h2 style="color:#0d9488;">${heading}</h2>
+          <p>${bodyText}</p>
+          <div style="background:#f0fdfa;border:2px solid #0d9488;border-radius:12px;padding:24px;text-align:center;margin:24px 0;">
+            <span style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#0d9488;">
+              ${otp}
+            </span>
+          </div>
+          <p style="color:#6b7280;font-size:14px;">${expiryText}</p>
         </div>
-        <p style="color:#6b7280;font-size:14px;">${expiryText}</p>
-      </div>
-    `,
-  });
+      `,
+    });
+  } catch (mailError: unknown) {
+    await supabase
+      .from("password_reset_otps")
+      .delete()
+      .eq("email", normalizedEmail)
+      .eq("otp", otp)
+      .eq("used", false);
+
+    return {
+      status: false,
+      message:
+        mailError instanceof Error ? mailError.message : "Failed to send OTP",
+      data: null,
+    };
+  }
 
   return {
     status: true,
@@ -151,6 +170,8 @@ export async function sendOtpService(
       locale === "ar"
         ? "تم إرسال رمز التحقق إلى بريدك"
         : "OTP sent to your email",
-    data: { email },
+    data: {
+      email: normalizedEmail,
+    },
   };
 }
