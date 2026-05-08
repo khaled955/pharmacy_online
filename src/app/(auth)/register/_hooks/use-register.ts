@@ -10,7 +10,7 @@ import type {
 } from "@/lib/types/auth";
 import { RegisterFormValues } from "@/lib/schemas/auth/register.schema";
 
-type PendingUser = {
+export type PendingUser = {
   first_name: string;
   last_name: string;
   phone?: string | null;

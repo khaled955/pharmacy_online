@@ -16,7 +16,11 @@ interface Props {
   errorMessage?: string;
 }
 
-export default function ForgotPasswordEmailStep({ onSubmit, isPending, errorMessage }: Props) {
+export default function ForgotPasswordEmailStep({
+  onSubmit,
+  isPending,
+  errorMessage,
+}: Props) {
   const form = useForm<ForgotPasswordEmailInput>({
     defaultValues: { email: "" },
     resolver: zodResolver(useForgotPasswordEmailSchema()),
@@ -26,7 +30,9 @@ export default function ForgotPasswordEmailStep({ onSubmit, isPending, errorMess
     <>
       {errorMessage && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
-          <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {errorMessage}
+          </p>
         </div>
       )}
 
@@ -39,7 +45,11 @@ export default function ForgotPasswordEmailStep({ onSubmit, isPending, errorMess
           {...form.register("email")}
         />
 
-        <Button type="submit" isLoading={isPending}>
+        <Button
+          type="submit"
+          isLoading={isPending}
+          disabled={form.formState.isSubmitted && !form.formState.isValid}
+        >
           Send verification code
         </Button>
       </form>

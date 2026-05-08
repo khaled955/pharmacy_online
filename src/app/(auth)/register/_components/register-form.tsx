@@ -10,34 +10,28 @@ import {
   useRegister,
   useVerifyRegisterOtp,
   useResendRegisterOtp,
+  type PendingUser,
 } from "../_hooks/use-register";
+import { useAvatarUpload } from "../_hooks/use-avatar-upload";
 
 import {
   useForgotPasswordOtpSchema,
   type ForgotPasswordOtpInput,
 } from "@/lib/schemas/auth/forgot-password.schema";
+import useRegisterSchema, {
+  type RegisterFormValues,
+} from "@/lib/schemas/auth/register.schema";
 import {
   AUTH_ROUTES,
   OTP_CONFIG,
   REGISTER_STEPS,
 } from "@/lib/constants/auth.constant";
 import type { RegisterResponseData, RegisterStep } from "@/lib/types/auth";
-import useRegisterSchema, {
-  RegisterFormValues,
-} from "@/lib/schemas/auth/register.schema";
 
+import AuthHeader from "@/components/feature/auth/auth-header";
 import RegisterStepIndicator from "./register-step-indicator";
 import RegisterInfoStep from "./register-info-step";
 import RegisterOtpStep from "./register-otp-step";
-import AuthHeader from "@/components/feature/auth/auth-header";
-
-type PendingUser = {
-  first_name: string;
-  last_name: string;
-  phone?: string | null;
-  password: string;
-  avatar: File | null;
-};
 
 export default function RegisterForm() {
   // Navigation
@@ -47,10 +41,7 @@ export default function RegisterForm() {
   const [step, setStep] = useState<RegisterStep>(REGISTER_STEPS.FORM);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [devOtp, setDevOtp] = useState<string | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [pendingUser, setPendingUser] = useState<PendingUser | null>(null);
-  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
-  const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
 
   // Mutations
   const { onRegister, regiseterError, regiseterIsPending, registerReset } =
@@ -58,7 +49,7 @@ export default function RegisterForm() {
   const verifyMutation = useVerifyRegisterOtp();
   const resendMutation = useResendRegisterOtp();
 
-  // Step 1 — registration form
+  // Form & validation — Step 1: registration info
   const {
     register: formRegister,
     handleSubmit,
@@ -79,7 +70,7 @@ export default function RegisterForm() {
     },
   });
 
-  // Step 2 — OTP form
+  // Form & validation — Step 2: OTP
   const {
     register: otpRegister,
     handleSubmit: otpHandleSubmit,
@@ -88,13 +79,32 @@ export default function RegisterForm() {
   } = useForm<ForgotPasswordOtpInput>({
     resolver: zodResolver(useForgotPasswordOtpSchema()),
     mode: "onChange",
-    defaultValues: {
-      otp: "",
-    },
+    defaultValues: { otp: "" },
   });
 
-  // Handlers
+  // Hooks
+  const {
+    avatarPreview,
+    isAvatarUploading,
+    avatarUploadProgress,
+    handleAvatarChange,
+    handleAvatarRemove,
+  } = useAvatarUpload(setValue, resetField);
 
+  // Variables
+  const isFormStep = step === REGISTER_STEPS.FORM;
+
+  const verifyError =
+    verifyMutation.data && !verifyMutation.data.status
+      ? verifyMutation.data.message
+      : null;
+
+  const headerTitle = isFormStep ? "Create account" : "Verify your email";
+  const headerDescription = isFormStep
+    ? "Join our pharmacy platform today"
+    : `We sent a ${OTP_CONFIG.LENGTH}-digit code to ${registeredEmail}`;
+
+  // Functions
   const onSubmit: SubmitHandler<RegisterFormValues> = (values) => {
     onRegister(values, {
       onSuccess: (data) => {
@@ -106,7 +116,6 @@ export default function RegisterForm() {
         const payload = data.data as RegisterResponseData;
 
         setRegisteredEmail(values.email);
-
         if (payload?.otp) setDevOtp(payload.otp);
 
         setPendingUser({
@@ -134,7 +143,6 @@ export default function RegisterForm() {
             toast.error(data.message);
             return;
           }
-
           router.push(`${AUTH_ROUTES.LOGIN}?verified=true`);
         },
       },
@@ -163,61 +171,15 @@ export default function RegisterForm() {
     setStep(REGISTER_STEPS.FORM);
   };
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setValue("avatar", file, { shouldValidate: true, shouldDirty: true });
-    setAvatarPreview(URL.createObjectURL(file));
-
-    // Mock upload progress until real upload is connected
-    setIsAvatarUploading(true);
-    setAvatarUploadProgress(0);
-
-    let progress = 0;
-
-    const interval = setInterval(() => {
-      progress += 20;
-      setAvatarUploadProgress(progress);
-
-      if (progress >= 100) {
-        clearInterval(interval);
-        setIsAvatarUploading(false);
-      }
-    }, 150);
-  }
-
-  function handleAvatarRemove() {
-    resetField("avatar");
-    setAvatarPreview(null);
-    setAvatarUploadProgress(0);
-    setIsAvatarUploading(false);
-  }
-
-  
-  const verifyError =
-    verifyMutation.data && !verifyMutation.data.status
-      ? verifyMutation.data.message
-      : null;
-
   return (
     <section className="w-full max-w-md">
       {/* header */}
-      <AuthHeader
-        title={
-          step === REGISTER_STEPS.FORM ? "Create account" : "Verify your email"
-        }
-        description={
-          step === REGISTER_STEPS.FORM
-            ? "Join our pharmacy platform today"
-            : `We sent a ${OTP_CONFIG.LENGTH}-digit code to ${registeredEmail}`
-        }
-      />
+      <AuthHeader title={headerTitle} description={headerDescription} />
 
       <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl dark:border-gray-800 dark:bg-gray-900">
         <RegisterStepIndicator step={step} />
 
-        {step === REGISTER_STEPS.FORM && (
+        {isFormStep ? (
           <RegisterInfoStep
             formRegister={formRegister}
             errors={errors}
@@ -232,9 +194,7 @@ export default function RegisterForm() {
             isValid={isValid}
             isSubmitted={isSubmitted}
           />
-        )}
-
-        {step === REGISTER_STEPS.OTP && (
+        ) : (
           <RegisterOtpStep
             registeredEmail={registeredEmail}
             devOtp={devOtp}
