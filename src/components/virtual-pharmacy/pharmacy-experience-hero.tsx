@@ -1,9 +1,4 @@
 "use client";
-
-// [NEW] PharmacyExperienceHero — enhanced hero with pharmacist mascot + "Start Your Journey" CTA
-// [SAFE] Replaces HeroSection only when ENABLE_VIRTUAL_EXPERIENCE=true; original file untouched
-// [WARNING] Framer Motion entrance animations — negligible perf cost
-
 import Link from "next/link";
 import {
   Search,
@@ -21,7 +16,6 @@ import { motion } from "framer-motion";
 import type { Easing } from "framer-motion";
 import { cn } from "@/lib/utils/tailwind-merge";
 
-/* ─── Static data (same as original hero) ──────────────────────── */
 const trustBadges = [
   { icon: ShieldCheck, label: "Secure Checkout",  color: "text-primary" },
   { icon: Star,        label: "Trusted Products", color: "text-amber-500 dark:text-amber-400" },
@@ -31,14 +25,13 @@ const trustBadges = [
 
 const popularSearches = ["Panadol", "Vitamin C", "Aspirin", "Centrum", "Skin Care"];
 
-/* ─── Pharmacist tips shown in mascot card ──────────────────────── */
+/* ─── Pharmacist tips*/
 const pharmacistTips = [
   "Stay hydrated — drink at least 8 glasses of water a day",
   "Take vitamins with food for better absorption",
   "Store medicines away from heat and humidity",
 ];
 
-/* ─── Shared ease constant (typed to satisfy Framer Motion v12) ─── */
 const EASE_OUT: Easing = "easeOut";
 
 /** Helper: returns the animation object for a staggered fade-up entrance */
@@ -66,22 +59,22 @@ function PharmacistMascot() {
       className={cn(
         "relative flex h-60 w-60 items-center justify-center",
         "rounded-3xl border border-border/50",
-        "bg-gradient-to-br from-primary/8 via-accent/30 to-background",
+        "bg-linear-to-br from-primary/8 via-accent/30 to-background",
         "shadow-card",
       )}
     >
       {/* Coat silhouette */}
       <div className="relative flex flex-col items-center">
         {/* Head */}
-        <div className="h-16 w-16 rounded-full bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-200/60 dark:border-amber-700/40 flex items-center justify-center">
-          <Stethoscope className="h-7 w-7 text-primary" />
+        <div className="size-16 rounded-full bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-200/60 dark:border-amber-700/40 flex items-center justify-center">
+          <Stethoscope className="size-7 text-primary" />
         </div>
         {/* Body / white coat */}
         <div className="mt-2 flex flex-col items-center gap-1">
           <div className="h-20 w-24 rounded-b-2xl bg-white dark:bg-slate-100/10 border border-border/60 flex flex-col items-center justify-center gap-2 shadow-sm">
             <div className="flex items-center gap-1.5">
-              <HeartPulse className="h-4 w-4 text-rose-500" />
-              <Pill className="h-4 w-4 text-primary" />
+              <HeartPulse className="size-4 text-rose-500" />
+              <Pill className="size-4 text-primary" />
             </div>
             <div className="h-1 w-12 rounded-full bg-primary/20" />
             <div className="h-1 w-8 rounded-full bg-primary/10" />
@@ -97,7 +90,7 @@ function PharmacistMascot() {
           "bg-primary text-white text-xs font-semibold shadow-sm whitespace-nowrap",
         )}
       >
-        <Sparkles className="h-3 w-3" />
+        <Sparkles className="size-3" />
         Your Pharmacist
       </div>
 
@@ -105,7 +98,7 @@ function PharmacistMascot() {
       <div
         className={cn(
           "absolute -right-4 top-8",
-          "max-w-[130px] rounded-2xl rounded-tl-none border border-border",
+          "max-w-32.5 rounded-2xl rounded-tl-none border border-border",
           "bg-card px-3 py-2 shadow-card",
           "text-[11px] leading-snug text-muted-foreground",
         )}
@@ -128,11 +121,11 @@ export default function PharmacyExperienceHero() {
       {/* Decorative blobs — identical to original hero */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -end-24 -top-24 h-96 w-96 rounded-full bg-primary/8 blur-3xl dark:bg-primary/6"
+        className="pointer-events-none absolute -inset-e-24 -top-24 h-96 w-96 rounded-full bg-primary/8 blur-3xl dark:bg-primary/6"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -start-16 bottom-0 h-72 w-72 rounded-full bg-secondary/60 blur-3xl dark:bg-primary/4"
+        className="pointer-events-none absolute -inset-s-16 bottom-0 h-72 w-72 rounded-full bg-secondary/60 blur-3xl dark:bg-primary/4"
       />
 
       <div className="section-container relative py-14 md:py-20">
@@ -147,14 +140,13 @@ export default function PharmacyExperienceHero() {
               Welcome, how can I help you today?
             </motion.div>
 
-            {/* [MODIFIED] Heading — same copy, added entrance animation */}
             <motion.h1
               {...fadeUp(0.08)}
               className="mb-4 text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl"
             >
-              Your trusted{" "}
+              Your trusted
               <span className="text-gradient-brand">online pharmacy</span>
-              {" "}for everyday care
+              for everyday care
             </motion.h1>
 
             <motion.p
@@ -165,7 +157,6 @@ export default function PharmacyExperienceHero() {
               fast delivery, trusted products, and smart AI assistance.
             </motion.p>
 
-            {/* Search bar — [SAFE] identical to original */}
             <motion.div {...fadeUp(0.22)}>
               <div
                 className={cn(
@@ -219,7 +210,7 @@ export default function PharmacyExperienceHero() {
               </div>
             </motion.div>
 
-            {/* [NEW] CTAs — includes new "Start Your Pharmacy Journey" */}
+            {/* "Start Your Pharmacy Journey" */}
             <motion.div {...fadeUp(0.3)} className="mt-8 flex flex-wrap gap-3">
               {/* [NEW] Primary CTA — scrolls to virtual shelf */}
               <button
@@ -235,7 +226,7 @@ export default function PharmacyExperienceHero() {
                 <ChevronRight className="h-4 w-4" />
               </button>
 
-              {/* [SAFE] Secondary CTA — links to products */}
+              {/*links to products */}
               <Link
                 href="/products"
                 className={cn(
@@ -249,7 +240,6 @@ export default function PharmacyExperienceHero() {
             </motion.div>
           </div>
 
-          {/* ── Right: Pharmacist mascot ─────────────────────────── */}
           <motion.div
             {...fadeIn(0.15)}
             className="relative hidden lg:flex flex-col items-center justify-center gap-6"
@@ -281,7 +271,6 @@ export default function PharmacyExperienceHero() {
         </div>
       </div>
 
-      {/* ── Trust badges bar — [SAFE] identical to original ──────── */}
       <div className="border-t border-border/50 bg-card/60 backdrop-blur-sm">
         <div className="section-container">
           <ul className="flex flex-wrap items-center justify-center divide-x divide-border/50 py-3">

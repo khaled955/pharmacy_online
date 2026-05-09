@@ -10,6 +10,7 @@ type InteractiveProductCardProps = Omit<
 >;
 
 export function InteractiveProductCard(props: InteractiveProductCardProps) {
+  // Mutation
   const { addToCart } = useAddToCart();
   const { toggleWishlist } = useToggleWishlist();
   const { data: wishlistIds = [] } = useWishlistProductIds();

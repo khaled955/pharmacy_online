@@ -23,6 +23,7 @@ export async function addToCartAction(
       .eq("product_id", productId)
       .single();
 
+      // if the product is already in the cart, we update the quantity instead of inserting a new row
     if (existing) {
       const { data, error } = await supabaseAdmin
         .from(SHOP_TABLES.CART)
@@ -34,7 +35,7 @@ export async function addToCartAction(
       if (error) throw new Error(error.message);
       return { status: true, message: "Cart updated", data: data as unknown as CartItemRow };
     }
-
+// if the product is not in the cart, we insert a new row
     const { data, error } = await supabaseAdmin
       .from(SHOP_TABLES.CART)
       .insert({ user_id: userId, product_id: productId, quantity })

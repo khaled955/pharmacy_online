@@ -3,7 +3,7 @@ import { Tag } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { Badge } from "@/components/ui/badge";
 
-/* Static promotion data — ready for dynamic props */
+/* Static promotion data */
 interface PromotionBannerData {
   id: string;
   badge?: string;
@@ -47,7 +47,7 @@ function PromoBanner({ promo }: { promo: PromotionBannerData }) {
       href={promo.href}
       className={cn(
         "group relative overflow-hidden rounded-2xl",
-        "bg-gradient-to-br",
+        "bg-linear-to-br",
         promo.accentFrom,
         promo.accentTo,
         "p-6 text-white",
@@ -60,11 +60,11 @@ function PromoBanner({ promo }: { promo: PromotionBannerData }) {
       {/* Decorative circle */}
       <div
         aria-hidden="true"
-        className="absolute -end-8 -top-8 h-32 w-32 rounded-full bg-white/8"
+        className="absolute -inset-e-8 -top-8 h-32 w-32 rounded-full bg-white/8"
       />
       <div
         aria-hidden="true"
-        className="absolute -bottom-6 end-12 h-20 w-20 rounded-full bg-white/6"
+        className="absolute -bottom-6 inset-e-12 h-20 w-20 rounded-full bg-white/6"
       />
 
       {/* Content */}

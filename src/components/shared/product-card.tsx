@@ -1,11 +1,11 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { ShoppingCart, Heart, Star } from "lucide-react";
 import { cn } from "@/lib/utils/tailwind-merge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export interface ProductCardProps {
   id: string;
@@ -17,15 +17,12 @@ export interface ProductCardProps {
   currency?: string;
   rating?: number;
   reviewCount?: number;
-  /** Relative URL or absolute URL for the product image */
   imageUrl?: string;
   inStock?: boolean;
   /** e.g. "20% OFF" */
   badge?: string;
   className?: string;
-  /** Called when the user presses Add to Cart */
   onAddToCart?: (id: string) => void;
-  /** Called when the user presses the wishlist button */
   onWishlist?: (id: string) => void;
   isWishlisted?: boolean;
 }
@@ -92,8 +89,8 @@ export function ProductCard({
         aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         onClick={() => onWishlist?.(id)}
         className={cn(
-          "absolute end-3 top-3 z-10",
-          "flex h-8 w-8 items-center justify-center rounded-full",
+          "absolute inset-e-3 top-3 z-10",
+          "flex size-8 items-center justify-center rounded-full",
           "border border-border bg-card/90 backdrop-blur-sm",
           "transition-all duration-200",
           "hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500",
@@ -113,7 +110,7 @@ export function ProductCard({
 
       {/* Discount badge */}
       {discountPercent && (
-        <div className="absolute start-3 top-3 z-10">
+        <div className="absolute inset-s-3 top-3 z-10">
           <Badge variant="sale">-{discountPercent}%</Badge>
         </div>
       )}
@@ -123,21 +120,24 @@ export function ProductCard({
         <div
           className={cn(
             "relative mx-3 mt-3 flex h-44 items-center justify-center overflow-hidden rounded-xl",
-            "bg-gradient-to-br from-muted/60 to-muted",
+            "bg-linear-to-br from-muted/60 to-muted",
             "transition-transform duration-300 group-hover:scale-[1.02]",
           )}
         >
           {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={imageUrl}
               alt={name}
-              className="h-full w-full object-contain p-3"
+              fill
+              sizes="(max-width: 640px) 100vw,
+             (max-width: 768px) 50vw,
+             33vw"
+              className="object-contain p-3"
               loading="lazy"
             />
           ) : (
             <div className="flex flex-col items-center gap-2 text-muted-foreground/40">
-              <div className="h-16 w-16 rounded-xl bg-muted-foreground/10" />
+              <div className="size-16 rounded-xl bg-muted-foreground/10" />
               <span className="text-xs">No image</span>
             </div>
           )}
@@ -165,9 +165,7 @@ export function ProductCard({
         </Link>
 
         {/* Rating */}
-        {rating !== undefined && (
-          <StarRow rating={rating} count={reviewCount} />
-        )}
+        {rating && <StarRow rating={rating} count={reviewCount} />}
 
         {/* Badge label */}
         {badge && (
@@ -195,10 +193,10 @@ export function ProductCard({
             <Button
               size="sm"
               onClick={() => onAddToCart?.(id)}
-              className="h-8 gap-1.5 rounded-xl px-3 text-xs"
+              className="h-8 gap-1.5 rounded-xl text-xs"
             >
               <ShoppingCart className="h-3.5 w-3.5" />
-              Add
+              
             </Button>
           ) : (
             <span className="text-xs font-medium text-muted-foreground">

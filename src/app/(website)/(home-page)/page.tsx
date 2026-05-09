@@ -4,8 +4,6 @@ import ErrorBoundary from "@/components/shared/error-boundary";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton, SectionHeaderSkeleton } from "@/components/ui/skeleton";
 
-// [NEW] Virtual Pharmacy Experience imports
-// [SAFE] Only rendered when ENABLE_VIRTUAL_EXPERIENCE = true; original components untouched
 import { ENABLE_VIRTUAL_EXPERIENCE } from "@/lib/constants/virtual-pharmacy";
 import PharmacyExperienceHero from "@/components/virtual-pharmacy/pharmacy-experience-hero";
 import VirtualShelfCategories from "@/components/virtual-pharmacy/virtual-shelf-categories";
@@ -17,7 +15,6 @@ import BrandsSection from "../_components/brands-section";
 import SiteReviewsSection from "../_components/site-reviews-section";
 import HealthAdviceSection from "../_components/health-advice-section";
 import AiAssistantBanner from "../_components/ai-assistant-banner";
-import { createClientFromServer } from "@/lib/supabase/server";
 
 /* ── Per-section skeleton fallbacks ── */
 function CategoriesFallback() {
@@ -34,61 +31,43 @@ function CategoriesFallback() {
 }
 
 export default async function Home() {
-  /* ── Auth check — logic unchanged ── */
-  const supabase = await createClientFromServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  void user; // available for personalisation when needed
-
+ 
   return (
     <div>
-      {/*
-        [MODIFIED] Hero section:
-        - When ENABLE_VIRTUAL_EXPERIENCE=true → PharmacyExperienceHero (new, with mascot + journey CTA)
-        - When false → original HeroSection (static, no fetch)
-        [REVERSIBLE] Toggle ENABLE_VIRTUAL_EXPERIENCE in src/lib/constants/virtual-pharmacy.ts
-      */}
+     
       {ENABLE_VIRTUAL_EXPERIENCE ? <PharmacyExperienceHero /> : <HeroSection />}
 
-      {/*
-        [MODIFIED] Categories section:
-        - When ENABLE_VIRTUAL_EXPERIENCE=true → VirtualShelfCategories (drawer interaction)
-        - When false → original CategoriesSection (plain grid, no drawer)
-      */}
+     \
       <ErrorBoundary>
         <Suspense fallback={<CategoriesFallback />}>
           {ENABLE_VIRTUAL_EXPERIENCE ? <VirtualShelfCategories /> : <CategoriesSection />}
         </Suspense>
       </ErrorBoundary>
 
-      {/* ── All sections below are [SAFE] — unchanged from original ── */}
 
       <Separator className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" />
 
-      {/* 3. Paid promotions (static — no fetch) */}
       <PromotionsBanner />
 
       <Separator className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" />
 
-      {/* 4. Best sellers + trending carousels (each wrapped internally) */}
+      {/*Best sellers + trending carousels  */}
       <FeaturedProductsSection />
 
-      {/* 5. Featured brand logos (static — no fetch) */}
+      {/*Featured brand */}
       <BrandsSection />
 
       <Separator className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" />
 
-      {/* 6. Customer reviews carousel (static data) */}
+      {/*Customer reviews carousel */}
       <SiteReviewsSection />
 
       <Separator className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" />
 
-      {/* 7. Health advice articles (static — no fetch) */}
+      {/*Health advice articles */}
       <HealthAdviceSection />
 
-      {/* 8. AI assistant CTA (static — no fetch) */}
+      {/* 8. AI assistant*/}
       <AiAssistantBanner />
 
       {/* Spacing before footer */}

@@ -29,7 +29,6 @@ function HeroSearchBarTrigger() {
       aria-hidden="true"
     >
       <div className="ms-4 flex h-5 w-5 items-center justify-center text-muted-foreground">
-        {/* inline SVG avoids a separate import in this render-only node */}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" />
@@ -57,7 +56,12 @@ function HeroSearchBarTrigger() {
   );
 }
 
+
+
+
 export default function HeroSection() {
+
+
   return (
     <section
       className={cn(
@@ -69,7 +73,7 @@ export default function HeroSection() {
       <div
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute -end-24 -top-24",
+          "pointer-events-none absolute -inset-e-24 -top-24",
           "h-96 w-96 rounded-full",
           "bg-primary/8 blur-3xl",
           "dark:bg-primary/6",
@@ -78,8 +82,8 @@ export default function HeroSection() {
       <div
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute -start-16 bottom-0",
-          "h-72 w-72 rounded-full",
+          "pointer-events-none absolute -inset-s-16 bottom-0",
+          "size-72 rounded-full",
           "bg-secondary/60 blur-3xl",
           "dark:bg-primary/4",
         )}
@@ -98,7 +102,7 @@ export default function HeroSection() {
             <h1 className="mb-4 text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl">
               Your trusted{" "}
               <span className="text-gradient-brand">online pharmacy</span>
-              {" "}for everyday care
+              for everyday care
             </h1>
 
             <p className="mb-8 max-w-lg text-base leading-relaxed text-muted-foreground">
@@ -160,7 +164,7 @@ export default function HeroSection() {
             className={cn(
               "relative hidden lg:flex items-center justify-center",
               "rounded-3xl overflow-hidden",
-              "bg-gradient-to-br from-primary/8 via-accent/30 to-background",
+              "bg-linear-to-br from-primary/8 via-accent/30 to-background",
               "border border-border/50 min-h-80",
             )}
           >

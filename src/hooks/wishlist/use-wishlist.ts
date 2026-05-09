@@ -26,7 +26,6 @@ export function useWishlist() {
   return useQuery<WishlistItemRow[]>({
     queryKey: QUERY_KEYS.WISHLIST,
     queryFn: fetchWishlist,
-    staleTime: 1000 * 60 * 2,
   });
 }
 
@@ -34,7 +33,6 @@ export function useWishlistCount() {
   return useQuery<number>({
     queryKey: QUERY_KEYS.WISHLIST_COUNT,
     queryFn: fetchWishlistCount,
-    staleTime: 1000 * 60 * 2,
   });
 }
 
@@ -42,6 +40,5 @@ export function useWishlistProductIds() {
   return useQuery<string[]>({
     queryKey: [...QUERY_KEYS.WISHLIST, "ids"],
     queryFn: fetchWishlistProductIds,
-    staleTime: 1000 * 60 * 2,
   });
 }

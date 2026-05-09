@@ -8,7 +8,6 @@ interface SectionHeaderProps {
   description?: string;
   viewAllHref?: string;
   viewAllLabel?: string;
-  /** Accent bar on the start side of the title */
   accent?: boolean;
   className?: string;
   children?: React.ReactNode;
@@ -61,7 +60,7 @@ export function SectionHeader({
             )}
           >
             {viewAllLabel}
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="size-3.5" />
           </Link>
         )}
       </div>
